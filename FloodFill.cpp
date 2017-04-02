@@ -31,6 +31,14 @@ const int RIGHT_WALL = 2;
 const int BOTTOM_WALL = 4;
 const int LEFT_WALL = 8;
 
+// directions representations
+const int DIRECTIONS = 4;
+const int NORTH = 0;
+const int EAST = 1;
+const int SOUTH = 2;
+const int WEST = 3;
+const string directions[DIRECTIONS] = {"North", "East", "South", "West"};
+
 /**
  * Name: notCenter()
  * Parameters: x - this is the x coordinate to be checked.
@@ -78,6 +86,121 @@ bool isOut(int x, int y) {
 
   // otherwise, return false
   return false;
+}
+
+/**
+ * Name: enterableCells()
+ * Parameters: currentX - the x position of the current location.
+ * currentY - they y position of the current location.
+ * theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * enterableNeighbors - the array to be populated with distances if the cell
+ * is enterable from the current location.
+ * Description: This function will be able to determine which neighbors are
+ * enterable and populate the given array with the distances. It will keep the
+ * element as 0 if there is a wall.
+ */
+void enterableCells(int currentX, int currentY, cell theMaze[SIZE][SIZE],
+int enterableNeighbors[DIRECTIONS]) {
+
+  int currentWall = theMaze[currentX][currentY].wall;
+
+  // check all directions whether this neighbor is enterable
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    // the i represents the current direction being examined, if there is no
+    // wall then add the distance to the array
+    switch (i) {
+
+      case NORTH:
+
+        if ((currentWall & TOP_WALL) == 0) {
+
+          enterableNeighbors[i] = theMaze[currentX - 1][currentY].distance;
+        }
+        break;
+
+      case EAST:
+
+        if ((currentWall & RIGHT_WALL) == 0) {
+
+          enterableNeighbors[i] = theMaze[currentX][currentY + 1].distance;
+        }
+        break;
+
+      case SOUTH:
+
+        if ((currentWall & BOTTOM_WALL) == 0) {
+
+          enterableNeighbors[i] = theMaze[currentX + 1][currentY].distance;
+        }
+        break;
+
+      case WEST:
+
+        if ((currentWall & LEFT_WALL) == 0) {
+
+          enterableNeighbors[i] = theMaze[currentX][currentY - 1].distance;
+        }
+        break;
+    }
+  }
+}
+
+/**
+ * Name: findMinDistance()
+ * Parameters: enterableNeighbors() - this is the array that contains the
+ * distances of the neighbors.
+ * Description: This function will find the least distance to center, except if
+ * the distance is 0 (a center).
+ * Return: an integer representing the smallest distance in given array.
+ */
+int findMinDistance(int enterableNeighbors[DIRECTIONS]) {
+
+  // this will keep track of the smallest distance
+  int min = SIZE * SIZE;
+
+  // check all distances
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    int currentDistance = enterableNeighbors[i];
+
+    if (currentDistance != 0 && currentDistance < min) {
+
+      min = currentDistance;
+    }
+  }
+
+  return min;
+}
+
+/**
+ * Name: stepAtDirection()
+ * Parameters: currentLocation - the current location of the mouse.
+ * direction - the direction to take a step to.
+ * Description: This function will update the current location to a neighbor for
+ * a step given the specified direction.
+ */
+void stepAtDirection(location* currentLocation, int direction) {
+
+    switch (direction) {
+
+      case NORTH:
+        currentLocation->x -= 1;
+        break;
+      
+      case EAST:
+        currentLocation->y +=1;
+        break;
+
+      case SOUTH:
+        currentLocation->x += 1;
+        break;
+
+      case WEST:
+        currentLocation->y -= 1;
+        break;
+    }
 }
 
 /**
@@ -133,6 +256,63 @@ void updateDistances(point current, &int theMaze[][]) {
     }
   }
 }*/
+
+/**
+ * Name: move()
+ * Parameters: theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * currentLocation - the current location of the mouse.
+ * currentDirection - the current direction of the mouse.
+ * Description: This function will be able to decide which way to turn and move.
+ * It will first attempt to go straight to the cell that is in the current
+ * direction with minimum distance. If not, it will turn the mouse in the order
+ * of N, E, S, W that has minimum distance.
+ */
+void move(cell theMaze[SIZE][SIZE], location* currentLocation,
+int* currentDirection) {
+
+  int currentX = currentLocation->x;
+  int currentY = currentLocation->y;
+
+  int enterableNeighbors[DIRECTIONS] = {0};
+
+  // check which neighbors can be entered (no wall in between)
+  enterableCells(currentX, currentY, theMaze, enterableNeighbors);
+
+  // find the minimum distance
+  int minDistance = findMinDistance(enterableNeighbors);
+
+  // check if the next cell of current direction has minimum distance
+  if (enterableNeighbors[*currentDirection] == minDistance) {
+
+    // TODO: Move mouse straight one step
+
+    // check the current direction then go straight
+    stepAtDirection(currentLocation, *currentDirection);
+  }
+
+  // otherwise, find the earliest direction then turn that way and move
+  else {
+
+    // find the direction that has the minimum distance, then go there
+    int index = 0;
+    for (; index < DIRECTIONS; index++) {
+
+      if (enterableNeighbors[index] == minDistance) {
+
+        break;
+      }
+    }
+
+    // take a step to that direction
+    stepAtDirection(currentLocation, index);
+
+    // update the direction
+    *currentDirection = index;
+
+    // TODO: turn to this direction, then take a step
+  }
+}
 
 /**
  * Name: floodMaze()
@@ -259,13 +439,16 @@ void floodMaze(cell theMaze[SIZE][SIZE]) {
  * Name: printMaze()
  * Parameters: theMaze - the 2D array representing the maze, where each element
  * is a cell that has a wall and distance member.
- * mouseX - the current x position of the mouse.
- * mouseY - the current y position of the mosue.
+ * currentLocation - the current location of the mouse
  * Description: This function has the ability to print the maze using the ASCII
  * characters to represent the walls and the mouse with the given maze
  * representation as defined.
  */
-void printMaze(cell theMaze[SIZE][SIZE], int mouseX, int mouseY) {
+void printMaze(cell theMaze[SIZE][SIZE], location currentLocation) {
+
+  // get the x and y of the mouse's location
+  int mouseX = currentLocation.x;
+  int mouseY = currentLocation.y;
 
   // print the walls on the top row
   for (int i = 0; i < SIZE; i++) {
@@ -348,7 +531,7 @@ void printArray(cell theMaze[SIZE][SIZE]) {
 
     for (int j = 0; j < SIZE; j++) {
 
-      printf("(%2d, %2d)", theMaze[i][j].wall, theMaze[i][j].distance);
+      printf("(%2d,%2d)", theMaze[i][j].wall, theMaze[i][j].distance);
     }
 
     cout << endl;
@@ -356,6 +539,10 @@ void printArray(cell theMaze[SIZE][SIZE]) {
 }
 
 int main(int argc, char* argv[]) {
+
+  // the current direction and position of the mouse
+  int currentDirection = NORTH;
+  location currentLocation = {2, 2};
 
   // initially all cells has no wall and 0 distance
   //cell theMaze[SIZE][SIZE] = {{0, 0}};
@@ -372,15 +559,18 @@ int main(int argc, char* argv[]) {
     {{L|R|B, 0},  {L|R|B, 0}, {L|B, 0},     {R|B, 0}}
   };
 
-  int mouseX = 2;
-  int mouseY = 2;
-
   // sample maze print out
-  printMaze(theMaze, mouseX, mouseY);
+  printMaze(theMaze, currentLocation);
 
   // flood the maze with initial distance
   floodMaze(theMaze);
 
+  // move to a cell, smaller value
+  move(theMaze, &currentLocation, &currentDirection);
+
+  printMaze(theMaze, currentLocation);
+
   printArray(theMaze);
+  cout << "Current Direction: " << directions[currentDirection] << endl;
 
 }
