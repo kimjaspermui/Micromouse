@@ -98,7 +98,7 @@ bool isOut(int x, int y) {
  * is enterable from the current location.
  * Description: This function will be able to determine which neighbors are
  * enterable and populate the given array with the distances. It will keep the
- * element as 0 if there is a wall.
+ * element as -1 if there is a wall.
  */
 void enterableCells(int currentX, int currentY, cell theMaze[SIZE][SIZE],
 int enterableNeighbors[DIRECTIONS]) {
@@ -152,7 +152,7 @@ int enterableNeighbors[DIRECTIONS]) {
  * Parameters: enterableNeighbors() - this is the array that contains the
  * distances of the neighbors.
  * Description: This function will find the least distance to center, except if
- * the distance is 0 (a center).
+ * the distance is -1, unenterable.
  * Return: an integer representing the smallest distance in given array.
  */
 int findMinDistance(int enterableNeighbors[DIRECTIONS]) {
@@ -165,7 +165,7 @@ int findMinDistance(int enterableNeighbors[DIRECTIONS]) {
 
     int currentDistance = enterableNeighbors[i];
 
-    if (currentDistance != 0 && currentDistance < min) {
+    if (currentDistance != -1 && currentDistance < min) {
 
       min = currentDistance;
     }
@@ -271,10 +271,12 @@ void updateDistances(point current, &int theMaze[][]) {
 void move(cell theMaze[SIZE][SIZE], location* currentLocation,
 int* currentDirection) {
 
+  // get the x and y position of the current location
   int currentX = currentLocation->x;
   int currentY = currentLocation->y;
 
-  int enterableNeighbors[DIRECTIONS] = {0};
+  // initially, assume neighbors are not enterable
+  int enterableNeighbors[DIRECTIONS] = {-1, -1, -1, -1};
 
   // check which neighbors can be entered (no wall in between)
   enterableCells(currentX, currentY, theMaze, enterableNeighbors);
@@ -538,14 +540,21 @@ void printArray(cell theMaze[SIZE][SIZE]) {
   }
 }
 
+void checkStatus(cell theMaze[SIZE][SIZE], location currentLocation,
+int currentDirection) {
+
+ // check status of the maze and mouse
+  printMaze(theMaze, currentLocation);
+  printArray(theMaze);
+  cout << "Current Direction: " << directions[currentDirection] << endl;
+  cout << "X: " << currentLocation.x << " Y: " << currentLocation.y << endl;
+}
+
 int main(int argc, char* argv[]) {
 
   // the current direction and position of the mouse
   int currentDirection = NORTH;
-  location currentLocation = {2, 2};
-
-  // initially all cells has no wall and 0 distance
-  //cell theMaze[SIZE][SIZE] = {{0, 0}};
+  location currentLocation = {3, 0};
 
   // sample maze
   int T = TOP_WALL;
@@ -553,6 +562,12 @@ int main(int argc, char* argv[]) {
   int B = BOTTOM_WALL;
   int L = LEFT_WALL;
   cell theMaze[SIZE][SIZE] = {
+    {{L|T, 0}, {T, 0}, {T, 0}, {R|T, 0}},
+    {{L, 0},   {0, 0}, {0, 0}, {R, 0}},
+    {{L, 0},   {0, 0}, {0, 0}, {R, 0}},
+    {{L|B, 0}, {B, 0}, {B, 0}, {R|B, 0}}
+  };
+  cell virtualMaze[SIZE][SIZE] = {
     {{L|T, 0},    {L|T, 0},   {R|T|B, 0},   {L|R|T, 0}},
     {{L, 0},      {0, 0},     {T|B, 0},     {R, 0}},
     {{L|R, 0},    {L|R, 0},   {L|T, 0},     {R, 0}},
@@ -565,12 +580,13 @@ int main(int argc, char* argv[]) {
   // flood the maze with initial distance
   floodMaze(theMaze);
 
-  // move to a cell, smaller value
-  move(theMaze, &currentLocation, &currentDirection);
+  // keep moving until 0 has been found
+  while (theMaze[currentLocation.x][currentLocation.y].distance != 0) {
 
-  printMaze(theMaze, currentLocation);
+    // move to a cell, smaller value
+    move(theMaze, &currentLocation, &currentDirection);
 
-  printArray(theMaze);
-  cout << "Current Direction: " << directions[currentDirection] << endl;
-
+    //evaluate
+    checkStatus(theMaze, currentLocation, currentDirection);
+  }
 }
