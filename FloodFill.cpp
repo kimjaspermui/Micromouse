@@ -1,11 +1,10 @@
 #include <utility>
 #include <queue>
+#include <stack>
 #include <vector>
 #include <iostream>
 
 using namespace std;
-
-//typedef pair<int, int> point;
 
 struct location {
 
@@ -41,6 +40,10 @@ const int EAST = 1;
 const int SOUTH = 2;
 const int WEST = 3;
 const string directions[DIRECTIONS] = {"North", "East", "South", "West"};
+const char directionSymbols[DIRECTIONS] = {'^', '>', 'v', '<'};
+
+//------------------------------------------------------------------------------
+// Helper functions start here
 
 /**
  * Name: notCenter()
@@ -267,61 +270,290 @@ int direction) {
       break;
   }
 }
+
 /**
-void floodFill(int xStart, int yStart) {
+ * Name: populateStack()
+ * Parameters: currentX - the x position of the current cell.
+ * currentY - the y position of the current cell.
+ * direction - the direction of the neighbor to be examined.
+ * myStack - the stack to populate.
+ * Description: This function will be able to populate the stack with the given
+ * neighbor that is not out of bounds.
+ */
+void populateStack(int currentX, int currentY, int direction,
+stack<location>* myStack) {
 
-  // 2d array representing the maze size 16 x 16?
-  int theMaze[SIZE][SIZE] = {0};
-  int mazePath[SIZE][SIZE] = {0};
+  switch (direction) {
 
-  // get the center position
-  point center = make_pair(xCenter, yCenter);
+    case NORTH:
+      
+      if (!isOut(currentX - 1, currentY)) {
 
-  // flood the cells with values starting from center, no walls
-  floodMaze(theMaze);
+        myStack->push({currentX - 1, currentY});
+      }
+      break;
 
-  // note that there will always have a wall on the right side of starting cell
+    case EAST:
+      
+      if (!isOut(currentX, currentY + 1)) {
 
-  // while goal not found
-    // move the mouse, choose a smaller value
-    // if tie, do the direction decision here
-    // if new wall found
-      updateDistances(current, theMaze);
-      printMaze(theMaze);
-      printMazePath(mazePath);
+        myStack->push({currentX, currentY + 1});
+      }
+      break;
+
+    case SOUTH:
+      
+      if (!isOut(currentX + 1, currentY)) {
+
+        myStack->push({currentX + 1, currentY});
+      }
+      break;
+
+    case WEST:
+      
+      if (!isOut(currentX, currentY - 1)) {
+
+        myStack->push({currentX, currentY - 1});
+      }
+      break;
+  }
 }
-*/
 
 /**
-void updateDistances(point current, &int theMaze[][]) {
+ * Name: printMaze()
+ * Parameters: theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * currentLocation - the current location of the mouse.
+ * currentDirection - the current direction of the mouse.
+ * Description: This function has the ability to print the maze using the ASCII
+ * characters to represent the walls and the mouse with the given maze
+ * representation as defined.
+ */
+void printMaze(cell theMaze[SIZE][SIZE], location currentLocation,
+int currentDirection) {
 
-  // stack to store the potentially changing points
-  stack<point> myStack;
+  // get the x and y of the mouse's location
+  int mouseX = currentLocation.x;
+  int mouseY = currentLocation.y;
 
-  myStack.push(current);
+  // print the walls on the top row
+  for (int i = 0; i < SIZE; i++) {
 
-  // find adjacent cell that is beside the new wall
+    cout << ' ';
+    cout << '=';
+  }
 
-  myStack.push(adjacent);
+  // the extra space at the end of top row
+  cout << ' ' << endl;
+
+  // print the left or bottom walls of the current cell if any
+  for (int i = 0; i < SIZE; i++) {
+
+    // iterate to print left walls, if any, then print the car if at the current
+    // cell
+    for (int j = 0; j < SIZE; j++) {
+
+      // get the current wall
+      int currentWall = theMaze[i][j].wall;
+
+      // check if there is a left wall, if so, print it
+      if ((currentWall & LEFT_WALL) != 0) {
+
+        cout << "|";
+      }
+
+      else {
+
+        cout << " ";
+      }
+
+      // check if the mouse is present at this cell, if so, print it
+      if (i == mouseX && j == mouseY) {
+
+        cout << directionSymbols[currentDirection];
+      }
+
+      else {
+
+        cout << " ";
+      }
+    }
+
+    // the wall at the very end, then new line
+    cout << "|" << endl;
+
+    // iterate to print the bottom walls, if any
+    for (int j = 0; j < SIZE; j++) {
+
+      // get the current wall
+      int currentWall = theMaze[i][j].wall;
+
+      // check if there is a bottom wall, if so, print it
+      if ((currentWall & BOTTOM_WALL) != 0) {
+
+        cout << " =";
+      }
+
+      else {
+
+        cout << "  ";
+      }
+    }
+
+    // the space at the very end, then new line
+    cout << " " << endl;
+  }
+}
+
+/**
+ * Name: printArray()
+ * Parameters: theMaze - the 2D array to be printed.
+ * Description: This function will print the given 2D array, where each element
+ * is a cell, which represents walls and distance.
+ */
+void printArray(cell theMaze[SIZE][SIZE]) {
+
+  for (int i = 0; i < SIZE; i++) {
+
+    for (int j = 0; j < SIZE; j++) {
+
+      printf("(%2d,%2d)", theMaze[i][j].wall, theMaze[i][j].distance);
+    }
+
+    cout << endl;
+  }
+}
+
+/**
+ * Name: checkStatus()
+ * Parameters: theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * currentLocation - the current location of the mouse.
+ * currentDirection - the current direction of the mouse.
+ * Description: This function will be used to check the current state of the
+ * maze and mouse for debugging purposes.
+ */
+void checkStatus(cell theMaze[SIZE][SIZE], location currentLocation,
+int currentDirection) {
+
+  // check status of the maze and mouse
+  printMaze(theMaze, currentLocation, currentDirection);
+  printArray(theMaze);
+}
+
+//------------------------------------------------------------------------------
+// Core functions start here
+
+void printEnter(int enter[DIRECTIONS], location myElement) {
+
+  printf("(%2d,%2d) Enterable: ", myElement.x, myElement.y);
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    cout << enter[i] << ", ";
+  }
+
+  cout << endl;
+}
+
+/**
+ * Name: updateDistances()
+ * Parameters: currentLocation - the location of the current that is being
+ * examined.
+ * theMaze - the 2D array representing the maze, where each element is a cell
+ * that has a wall and distance member.
+ * neighbors - this is an array containing the neighbors that are enterable,
+ * represented by a value of 1, 0 otherwise.
+ * Description: This function will be able to update the distances of the cells
+ * starting from the current cell and the neighbors that has new walls added to
+ * them.
+ */
+void updateDistances(location currentLocation, cell theMaze[SIZE][SIZE],
+int neighbors[DIRECTIONS]) {
+
+  // get the x and y position of the current location
+  int currentX = currentLocation.x;
+  int currentY = currentLocation.y;
+
+  // stack to store the potentially changing cell's distance
+  stack<location> myStack;
+
+  // push the current cell
+  myStack.push(currentLocation);
+
+  // iterate through all directions
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    // if this neighbor has been set to 1, then put it to stack
+    if (neighbors[i] == 1) {
+
+      // push the neighbor if it's valid, if so, add it to stack
+      populateStack(currentX, currentY, i, &myStack);
+    }
+  }
+
+  // this will track the element being examined from the stack
+  location myElement;
 
   // update while there is element in stack
   while (!myStack.empty()) {
 
     // get the top element
-    current = myStack.top();
+    myElement = myStack.top();
     myStack.pop();
 
-    int correct = // minimum reachable neighbor + 1
+    // the x and y positions of the current element
+    int tempX = myElement.x;
+    int tempY = myElement.y;
 
-    //if (// current's value != correct && current's value != 0) {
+    // get the distance of the current element
+    int* currentDistance = &(theMaze[tempX][tempY].distance);
 
-      // current's value = correct;
+    // array to keep track which neighbor is enterable (open)
+    int enterableNeighbors[DIRECTIONS] = {-1, -1, -1, -1};
+
+    // find out which neighbors can be entered (no wall in between)
+    enterableCells(tempX, tempY, theMaze, enterableNeighbors);
+    // printEnter(enterableNeighbors, myElement);
+
+    // find the minimum distance among the neighbors
+    int minDistance = findMinDistance(enterableNeighbors);
+
+    // the correct distance value of the current cell is minimum distance
+    // neighbor + 1
+    int correctDistance = minDistance + 1;
+
+    // check if the distance of the current element is not correct and it is not
+    // the center, if so, update the distance and push the open neighbors to the
+    // stack
+    if (*currentDistance != correctDistance && *currentDistance != 0) {
+
+      // update the distance of the current element
+      *currentDistance = correctDistance;
+
       // push all reachable neighbors to stack
+      for (int i = 0; i < DIRECTIONS; i++) {
+
+        // if it's not -1, then it's reachable
+        if (enterableNeighbors[i] != -1) {
+
+          populateStack(tempX, tempY, i, &myStack);
+        }
+      }
     }
   }
-}*/
+}
 
 /**
+ * Name: evaluateCell()
+ * Parameters: theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * virtualMaze - the testing maze to see where are the walls.
+ * currentLocation - the current location of the mouse.
+ * Description: This function will first examine if there are new walls
+ * discovered around the cell, it will update the cell's wall status
+ * accordingly. Then, it wiill call the helper function to update the distances
+ * starting from the current cell and the neighbor cells that have added new
+ * walls.
  */
 void evaluateCell(cell theMaze[SIZE][SIZE], cell virtualMaze[SIZE][SIZE],
 location currentLocation) {
@@ -334,6 +566,10 @@ location currentLocation) {
   // get the status of the wall at the current location
   int *currentWalls = &(theMaze[currentX][currentY].wall);
   int actualWalls = virtualMaze[currentX][currentY].wall;
+
+  // this will keep track which neighbors should be put into the stack for
+  // distance update
+  int neighbors[DIRECTIONS] = {0};
 
   // for loop to check if there is new wall discovered
   for (int i = 0; i < DIRECTIONS; i++) {
@@ -351,12 +587,15 @@ location currentLocation) {
        // update the neighbor wall
        updateNeighborWall(currentX, currentY, theMaze, i);
 
-       // update the distances starting from the current cell and neighbor cell
-       // if applicable
-       //updateDistances(currentX, currentY, theMaze, i);
+       // set this neighbor to be put in stack for distance update
+       neighbors[i] = 1;
       }
     }
   }
+
+  // update the distances starting from the current cell and neighbor cells if
+  // applicable
+  updateDistances(currentLocation, theMaze, neighbors);
 }
 
 /**
@@ -539,119 +778,6 @@ void floodMaze(cell theMaze[SIZE][SIZE]) {
   }
 }
 
-/**
- * Name: printMaze()
- * Parameters: theMaze - the 2D array representing the maze, where each element
- * is a cell that has a wall and distance member.
- * currentLocation - the current location of the mouse
- * Description: This function has the ability to print the maze using the ASCII
- * characters to represent the walls and the mouse with the given maze
- * representation as defined.
- */
-void printMaze(cell theMaze[SIZE][SIZE], location currentLocation) {
-
-  // get the x and y of the mouse's location
-  int mouseX = currentLocation.x;
-  int mouseY = currentLocation.y;
-
-  // print the walls on the top row
-  for (int i = 0; i < SIZE; i++) {
-
-    cout << ' ';
-    cout << '=';
-  }
-
-  // the extra space at the end of top row
-  cout << ' ' << endl;
-
-  // print the left or bottom walls of the current cell if any
-  for (int i = 0; i < SIZE; i++) {
-
-    // iterate to print left walls, if any, then print the car if at the current
-    // cell
-    for (int j = 0; j < SIZE; j++) {
-
-      // get the current wall
-      int currentWall = theMaze[i][j].wall;
-
-      // check if there is a left wall, if so, print it
-      if ((currentWall & LEFT_WALL) != 0) {
-
-        cout << "|";
-      }
-
-      else {
-
-        cout << " ";
-      }
-
-      // check if the mouse is present at this cell, if so, print it
-      if (i == mouseX && j == mouseY) {
-
-        cout << "*";
-      }
-
-      else {
-
-        cout << " ";
-      }
-    }
-
-    // the wall at the very end, then new line
-    cout << "|" << endl;
-
-    // iterate to print the bottom walls, if any
-    for (int j = 0; j < SIZE; j++) {
-
-      // get the current wall
-      int currentWall = theMaze[i][j].wall;
-
-      // check if there is a bottom wall, if so, print it
-      if ((currentWall & BOTTOM_WALL) != 0) {
-
-        cout << " =";
-      }
-
-      else {
-
-        cout << "  ";
-      }
-    }
-
-    // the space at the very end, then new line
-    cout << " " << endl;
-  }
-}
-
-/**
- * Name: printArray()
- * Parameters: theMaze - the 2D array to be printed.
- * Description: This function will print the given 2D array, where each element
- * is a cell, which represents walls and distance.
- */
-void printArray(cell theMaze[SIZE][SIZE]) {
-
-  for (int i = 0; i < SIZE; i++) {
-
-    for (int j = 0; j < SIZE; j++) {
-
-      printf("(%2d,%2d)", theMaze[i][j].wall, theMaze[i][j].distance);
-    }
-
-    cout << endl;
-  }
-}
-
-void checkStatus(cell theMaze[SIZE][SIZE], location currentLocation,
-int currentDirection) {
-
- // check status of the maze and mouse
-  printMaze(theMaze, currentLocation);
-  printArray(theMaze);
-  cout << "Current Direction: " << directions[currentDirection] << endl;
-  cout << "X: " << currentLocation.x << " Y: " << currentLocation.y << endl;
-}
-
 int main(int argc, char* argv[]) {
 
   // the current direction and position of the mouse
@@ -670,14 +796,18 @@ int main(int argc, char* argv[]) {
     {{L|R|B, 0}, {L|B, 0}, {B, 0}, {R|B, 0}}
   };
   cell virtualMaze[SIZE][SIZE] = {
-    {{L|T, 0},    {L|T, 0},   {R|T|B, 0},   {L|R|T, 0}},
-    {{L, 0},      {0, 0},     {T|B, 0},     {R, 0}},
-    {{L|R, 0},    {L|R, 0},   {L|T, 0},     {R, 0}},
-    {{L|R|B, 0},  {L|R|B, 0}, {L|B, 0},     {R|B, 0}}
+    {{L|T, 0},    {T|B, 0},   {T|B, 0},   {R|T, 0}},
+    {{L|R, 0},    {L|T, 0},   {R|T, 0},   {L|R, 0}},
+    {{L|R, 0},    {L, 0},     {R, 0},     {L|R, 0}},
+    {{L|R|B, 0},  {L|B, 0},   {B, 0},     {R|B, 0}}
   };
 
   // sample maze print out
-  printMaze(theMaze, currentLocation);
+  cout << "Virtual Maze:" << endl;
+  printMaze(virtualMaze, currentLocation, currentDirection);
+
+  cout << endl << "Initial Maze: " << endl;
+  printMaze(theMaze, currentLocation, currentDirection);
 
   // flood the maze with initial distance
   floodMaze(theMaze);
