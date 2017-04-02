@@ -13,6 +13,7 @@ struct location {
   int y;
 };
 
+// need visited member?
 struct cell {
 
   int wall;
@@ -26,10 +27,12 @@ const int CENTER_MAX = SIZE / 2;
 const int NUM_CENTERS = 4;
 
 // walls representations
+const int WALLS = 4;
 const int TOP_WALL = 1;
 const int RIGHT_WALL = 2;
 const int BOTTOM_WALL = 4;
 const int LEFT_WALL = 8;
+const int walls[WALLS] = {1, 2, 4, 8};
 
 // directions representations
 const int DIRECTIONS = 4;
@@ -204,6 +207,67 @@ void stepAtDirection(location* currentLocation, int direction) {
 }
 
 /**
+ * Name: addWall()
+ * Parameters: currentX - the x position of the neighbor.
+ * currentY - the y position of the neighbor.
+ * theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * wall - the side of the wall to add.
+ * Description: This function will update the wall of the given location with
+ * the side of the wall.
+ */
+void addWall(int currentX, int currentY, cell theMaze[SIZE][SIZE], int wall) {
+
+  // add the wall at the given location
+  if (!isOut(currentX, currentY)) {
+
+    int *tempWall = &(theMaze[currentX][currentY].wall);
+    *tempWall = *tempWall | wall;
+  }  
+}
+
+/**
+ * Name: updateNeighborWall()
+ * Parameters: currentX - the x position of the current location.
+ * currentY - the y position of the current location.
+ * theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * direction - the direction of the neighbor to add wall.
+ * Description: This function will be able to add the corresponding wall of the
+ * the neighbor with the corresponding direction.
+ */
+void updateNeighborWall(int currentX, int currentY, cell theMaze[SIZE][SIZE],
+int direction) {
+
+  // update the wall of the neighbor
+  switch (direction) {
+
+    // north side neighbor
+    case NORTH:
+
+      addWall(currentX - 1, currentY, theMaze, BOTTOM_WALL);
+      break;
+
+    // east side neighbor
+    case EAST:
+
+      addWall(currentX, currentY + 1, theMaze, LEFT_WALL);
+      break;
+
+    // south side neighbor
+    case SOUTH:
+
+      addWall(currentX + 1, currentY, theMaze, TOP_WALL);
+      break;
+
+    // west side neighbor
+    case WEST:
+
+      addWall(currentX, currentY - 1, theMaze, RIGHT_WALL);
+      break;
+  }
+}
+/**
 void floodFill(int xStart, int yStart) {
 
   // 2d array representing the maze size 16 x 16?
@@ -256,6 +320,44 @@ void updateDistances(point current, &int theMaze[][]) {
     }
   }
 }*/
+
+/**
+ */
+void evaluateCell(cell theMaze[SIZE][SIZE], cell virtualMaze[SIZE][SIZE],
+location currentLocation) {
+
+  // get the x and y position of the current location
+  int currentX = currentLocation.x;
+  int currentY = currentLocation.y;
+
+  // TODO: request for new walls status
+  // get the status of the wall at the current location
+  int *currentWalls = &(theMaze[currentX][currentY].wall);
+  int actualWalls = virtualMaze[currentX][currentY].wall;
+
+  // for loop to check if there is new wall discovered
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    // check if there is a wall at this direction
+    if ((actualWalls & walls[i]) != 0) {
+
+      // if there is, check if the wall not exist in theMaze, add it if that's
+      // the case (new wall discovered)
+      if ((*currentWalls & walls[i]) == 0) {
+
+        // add the wall
+        *currentWalls = *currentWalls | walls[i];
+
+       // update the neighbor wall
+       updateNeighborWall(currentX, currentY, theMaze, i);
+
+       // update the distances starting from the current cell and neighbor cell
+       // if applicable
+       //updateDistances(currentX, currentY, theMaze, i);
+      }
+    }
+  }
+}
 
 /**
  * Name: move()
@@ -562,10 +664,10 @@ int main(int argc, char* argv[]) {
   int B = BOTTOM_WALL;
   int L = LEFT_WALL;
   cell theMaze[SIZE][SIZE] = {
-    {{L|T, 0}, {T, 0}, {T, 0}, {R|T, 0}},
-    {{L, 0},   {0, 0}, {0, 0}, {R, 0}},
-    {{L, 0},   {0, 0}, {0, 0}, {R, 0}},
-    {{L|B, 0}, {B, 0}, {B, 0}, {R|B, 0}}
+    {{L|T, 0},   {T, 0},   {T, 0}, {R|T, 0}},
+    {{L, 0},     {0, 0},   {0, 0}, {R, 0}},
+    {{L, 0},     {0, 0},   {0, 0}, {R, 0}},
+    {{L|R|B, 0}, {L|B, 0}, {B, 0}, {R|B, 0}}
   };
   cell virtualMaze[SIZE][SIZE] = {
     {{L|T, 0},    {L|T, 0},   {R|T|B, 0},   {L|R|T, 0}},
@@ -586,7 +688,11 @@ int main(int argc, char* argv[]) {
     // move to a cell, smaller value
     move(theMaze, &currentLocation, &currentDirection);
 
-    //evaluate
+    // evaluate the cell to see if there are new walls, then update the
+    // distances accordingly
+    evaluateCell(theMaze, virtualMaze, currentLocation);
+    
+    // check the status through print outs
     checkStatus(theMaze, currentLocation, currentDirection);
   }
 }
