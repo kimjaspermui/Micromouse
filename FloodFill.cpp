@@ -23,6 +23,7 @@ struct cell {
 const int SIZE = 4;
 const int CENTER_MIN = SIZE / 2 - 1;
 const int CENTER_MAX = SIZE / 2;
+const int NUM_CENTERS = 4;
 
 // walls representations
 const int TOP_WALL = 1;
@@ -31,29 +32,53 @@ const int BOTTOM_WALL = 4;
 const int LEFT_WALL = 8;
 
 /**
-bool notCenterAndOut(int x, int y) {
+ * Name: notCenter()
+ * Parameters: x - this is the x coordinate to be checked.
+ * y - this is the y coordinate to be checked.
+ * Description: This function will check whether or not the given coordinates
+ * combine is one of the centers.
+ * Return: A boolean indicating that the given coordinates combine is one of the
+ * centers.
+ */
+bool isCenter(int x, int y) {
 
-  // check if it's one of the center
+  // check if it's one of the centers
+  if (x >= CENTER_MIN && x <= CENTER_MAX) {
+
+    if (y >= CENTER_MIN && y <= CENTER_MAX) {
+
+      return true;
+    }
+  }
+
+  // otherwise, return false
+  return false;
+}
+
+/**
+ * Name: notOut()
+ * Parameters: x - this is the x coordinate to be checked.
+ * y - this is the y coordinate to be checked.
+ * Description: This function will check whether or not the given coordinates
+ * are out of bounds of the 2D array.
+ * Return: A boolean indicating that the given coordinates are out of bounds.
+ */
+bool isOut(int x, int y) {
+
+  // check if x and y is out of bounds of the maze array
   if (x < 0 || x >= SIZE) {
 
-    return false;
+    return true;
   }
 
   else if (y < 0 || y >= SIZE) {
 
-    return false;
+    return true;
   }
 
-  else if (x >= CENTER_MIN && x <= CENTER_MAX) {
-
-    if (y >= CENTER_MIN && y <= CENTER_MAX) {
-
-      return false;
-    }
-  }
-
-  return true;
-}*/
+  // otherwise, return false
+  return false;
+}
 
 /**
 void floodFill(int xStart, int yStart) {
@@ -81,115 +106,6 @@ void floodFill(int xStart, int yStart) {
 */
 
 /**
-void floodMaze(int theMaze[SIZE][SIZE]) {
-
-  for (int i = 0; i < SIZE; i++) {
-
-    for (int j = 0; j < SIZE; j++) {
-
-      theMaze[i][j] = 0;
-    }
-  }
-
-  point center1 = make_pair(CENTER_MIN, CENTER_MIN);
-  point center2 = make_pair(CENTER_MIN, CENTER_MAX);
-  point center3 = make_pair(CENTER_MAX, CENTER_MIN);
-  point center4 = make_pair(CENTER_MAX, CENTER_MAX);
-
-  queue<point> myQueue;
-
-  int current = 0;
-  int count = 4;
-  int tempCount = 0;
-
-  myQueue.push(center1);
-  myQueue.push(center2);
-  myQueue.push(center3);
-  myQueue.push(center4);
-
-  while (!myQueue.empty()) {
-
-    point currentPoint = myQueue.front();
-    myQueue.pop();
-    theMaze[currentPoint.first][currentPoint.second] = current;
-
-    int currentX = currentPoint.first;
-    int currentY = currentPoint.second;
-
-    cout << "current X: " << currentX << " current Y: " << currentY << endl;
-
-    int tempX = 0;
-    int tempY = 0;
-
-    // examine neighbors
-    for (int i = 0; i < 4; i++) {
-
-      switch (i) {
-
-        // up
-        case 0:
-          tempX = currentX - 1;
-          tempY = currentY;
-          break;
-
-        // right
-        case 1:
-          tempX = currentX;
-          tempY = currentY + 1;
-          break;
-
-        // down
-        case 2:
-          tempX = currentX + 1;
-          tempY = currentY;
-          break;
-
-        // left
-        case 3:
-          tempX = currentX;
-          tempY = currentY - 1;
-          break;
-      }
-
-      // check if it's not center or outside
-      if (notCenterAndOut(tempX, tempY)) {
-
-        // if not, then check if it's 0 or pending to be changed -1
-        if (theMaze[tempX][tempY] == 0 && theMaze[tempX][tempY] != -1) {
-
-          cout << "temp X: " << tempX << " temp Y: " << tempY << endl;
-          // add this point to the queue
-          myQueue.push(make_pair(tempX, tempY));
-          theMaze[tempX][tempY] = -1;
-          tempCount++;
-        }
-      }
-    }
-
-    cout << "count: "<< count << endl;
-    count--;
-
-    if (count == 0) {
-
-      cout << "hello" << current << endl;
-      count = tempCount;
-      tempCount = 0;
-      current++;
-    }
-  }
-
-  for (int i = 0; i < SIZE; i++) {
-
-    for (int j = 0; j < SIZE; j++) {
-
-      printf("%2d",theMaze[i][j]);
-    }
-
-    cout << endl;
-  }
-}*/
-
-/**
 void updateDistances(point current, &int theMaze[][]) {
 
   // stack to store the potentially changing points
@@ -214,6 +130,127 @@ void updateDistances(point current, &int theMaze[][]) {
 
       // current's value = correct;
       // push all reachable neighbors to stack
+    }
+  }
+}*/
+
+/**
+ * Name: floodMaze()
+ * Parameters: theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * Description: This function will be able to flood the distances of each cell
+ * of the given maze with initial distances.
+ */
+void floodMaze(cell theMaze[SIZE][SIZE]) {
+
+  // constants for neighbors searching
+  const int NUM_NEIGHBORS = 4;
+  const int TOP = 0;
+  const int RIGHT = 1;
+  const int BOTTOM = 2;
+  const int LEFT = 3; 
+
+  // define all of the centers
+  location center1 = {CENTER_MIN, CENTER_MIN};
+  location center2 = {CENTER_MIN, CENTER_MAX};
+  location center3 = {CENTER_MAX, CENTER_MIN};
+  location center4 = {CENTER_MAX, CENTER_MAX};
+
+  // the queue for storing the neighbors to be updated
+  queue<location> myQueue;
+
+  // current distance starts with 0
+  int currentDistance = 0;
+
+  // number of cells for this distance 
+  int count = NUM_CENTERS;
+
+
+  int tempCount = 0;
+
+  // push all of the centers to queue
+  myQueue.push(center1);
+  myQueue.push(center2);
+  myQueue.push(center3);
+  myQueue.push(center4);
+
+  // while loop to update all of the cell's distaces
+  while (!myQueue.empty()) {
+
+    // get the next element from the queue
+    location currentPoint = myQueue.front();
+    myQueue.pop();
+
+    // update the distance at this location with the current distance
+    theMaze[currentPoint.x][currentPoint.y].distance = currentDistance;
+
+    // get the x and y of the current location
+    int currentX = currentPoint.x;
+    int currentY = currentPoint.y;
+
+    // temporary x and y for the neighbors
+    int tempX = 0;
+    int tempY = 0;
+
+    // try all of the neighbors
+    for (int i = 0; i < NUM_NEIGHBORS; i++) {
+
+      switch (i) {
+
+        // top neighbor
+        case TOP:
+          tempX = currentX - 1;
+          tempY = currentY;
+          break;
+
+        // right neighbor
+        case RIGHT:
+          tempX = currentX;
+          tempY = currentY + 1;
+          break;
+
+        // bottom neighbor
+        case BOTTOM:
+          tempX = currentX + 1;
+          tempY = currentY;
+          break;
+
+        // left neighbor
+        case LEFT:
+          tempX = currentX;
+          tempY = currentY - 1;
+          break;
+      }
+
+      // check if it's not center or outside
+      if (!isCenter(tempX, tempY) && !isOut(tempX, tempY)) {
+
+        // get the distance of this neighbor cell
+        int neighborDistance = theMaze[tempX][tempY].distance;
+
+        // check if the distance is 0 and not pending to be changed -1
+        if (neighborDistance == 0 && neighborDistance != -1) {
+
+          // add this location to the queue
+          myQueue.push({tempX, tempY});
+          theMaze[tempX][tempY].distance = -1;
+          tempCount++;
+        }
+      }
+    }
+
+    // decrement it to keep track of the remaining cell for currentDistance
+    count--;
+
+    // if count becomes 0, then time to reset it
+    if (count == 0) {
+
+      // assign tempCount to count, then reset tempCount
+      count = tempCount;
+      tempCount = 0;
+
+      // increment the currentDistance
+      currentDistance++;
     }
   }
 }
@@ -301,18 +338,17 @@ void printMaze(cell theMaze[SIZE][SIZE], int mouseX, int mouseY) {
 
 /**
  * Name: printArray()
- * Parameters: myArray - the 2D array to be printed.
+ * Parameters: theMaze - the 2D array to be printed.
  * Description: This function will print the given 2D array, where each element
  * is a cell, which represents walls and distance.
  */
-void printArray(cell myArray[SIZE][SIZE]) {
+void printArray(cell theMaze[SIZE][SIZE]) {
 
   for (int i = 0; i < SIZE; i++) {
 
     for (int j = 0; j < SIZE; j++) {
 
-      cout << "(" << myArray[i][j].wall << ", ";
-      cout << myArray[i][j].distance << ") ";
+      printf("(%2d, %2d)", theMaze[i][j].wall, theMaze[i][j].distance);
     }
 
     cout << endl;
@@ -322,7 +358,7 @@ void printArray(cell myArray[SIZE][SIZE]) {
 int main(int argc, char* argv[]) {
 
   // initially all cells has no wall and 0 distance
-  // cell theMaze[SIZE][SIZE];
+  //cell theMaze[SIZE][SIZE] = {{0, 0}};
 
   // sample maze
   int T = TOP_WALL;
@@ -342,19 +378,9 @@ int main(int argc, char* argv[]) {
   // sample maze print out
   printMaze(theMaze, mouseX, mouseY);
 
+  // flood the maze with initial distance
+  floodMaze(theMaze);
+
   printArray(theMaze);
 
-  // floodMaze(distanceMaze);
 }
-
-
-
-
-
-
-
-
-
-
-
-
