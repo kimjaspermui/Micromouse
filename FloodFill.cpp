@@ -499,6 +499,25 @@ void printEnter(int enter[DIRECTIONS], location myElement) {
 }
 
 /**
+ * Name: reverseDistance()
+ * Parameters: theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * Description: This function will be able to reverse the distances of the
+ * cells.
+ */
+void reverseDistance(cell theMaze[SIZE][SIZE], int max) {
+
+  // for loop to update all of the distances
+  for (int i = 0; i < SIZE; i++) {
+
+    for (int j = 0; j < SIZE; j++) {
+
+      theMaze[i][j].distance = max - theMaze[i][j].distance;
+    }
+  }
+}
+
+/**
  * Name: findExit()
  * Parameters: theMaze - the 2D array representing the maze, where each element
  * is a cell that has a wall and distance member.
@@ -961,8 +980,14 @@ int main(int argc, char* argv[]) {
   // go back to starting point
   findExit(theMaze, &currentLocation, &currentDirection);
 
-  // reverseDistance(theMaze);
+  int shortestDistance = theMaze[START_X][START_Y].distance;
 
+  // reverse the distances of all the cell
+  reverseDistance(theMaze, shortestDistance);
+
+  checkStatus(theMaze, currentLocation, currentDirection);
+
+  // fill in dead ends
   /**
   while(!(currentLocation->x == start->x && currentLocation->y == start->y)) {
     
