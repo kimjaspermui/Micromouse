@@ -17,6 +17,7 @@ struct cell {
 
   int wall;
   int distance;
+  bool dead;
 };
 
 // NOTE: need static allocation instead of dynamic
@@ -25,6 +26,9 @@ const int SIZE = 4;
 const int CENTER_MIN = SIZE / 2 - 1;
 const int CENTER_MAX = SIZE / 2;
 const int NUM_CENTERS = 4;
+
+const int START_X = 3;
+const int START_Y = 0;
 
 /**
 // odd
@@ -40,6 +44,9 @@ const int RIGHT_WALL = 2;
 const int BOTTOM_WALL = 4;
 const int LEFT_WALL = 8;
 const int walls[WALLS] = {1, 2, 4, 8};
+
+const int DEAD_WALLS = 3;
+const int DEAD_WALLS_NEIGHBOR = 2;
 
 // directions representations
 const int DIRECTIONS = 4;
@@ -328,6 +335,33 @@ stack<location>* myStack) {
 }
 
 /**
+ * Name: numWalls()
+ * Parameters: walls - this is the walls to be counted.
+ * Description: This function will be able to count the number of walls from the
+ * given walls.
+ * Return: An int representing the number of walls around this cell.
+ */
+int numWalls(int walls) {
+
+  // the mask to get the first bit
+  int mask = 1;
+
+  // the counter of 1's
+  int count = 0;
+
+  // for loop to count the number of walls
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    if ((walls >> i & mask) == 1) {
+
+      count++;
+    }
+  }
+
+  return count;
+}
+
+/**
  * Name: printMaze()
  * Parameters: theMaze - the 2D array representing the maze, where each element
  * is a cell that has a wall and distance member.
@@ -425,7 +459,8 @@ void printArray(cell theMaze[SIZE][SIZE]) {
 
     for (int j = 0; j < SIZE; j++) {
 
-      printf("(%2d,%2d)", theMaze[i][j].wall, theMaze[i][j].distance);
+      printf("(%2d,%2d,%d)", theMaze[i][j].wall, theMaze[i][j].distance,
+      theMaze[i][j].dead);
     }
 
     cout << endl;
@@ -446,7 +481,7 @@ int currentDirection) {
 
   // check status of the maze and mouse
   printMaze(theMaze, currentLocation, currentDirection);
-  // printArray(theMaze);
+  printArray(theMaze);
 }
 
 //------------------------------------------------------------------------------
@@ -464,6 +499,13 @@ void printEnter(int enter[DIRECTIONS], location myElement) {
 }
 
 /**
+ * Name: findExit()
+ * Parameters: theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * currentLocation - the current location of the mouse.
+ * currentDirection - the current direction of the mouse.
+ * Description: This function will be used only when the mouse is at the center,
+ * and when it is trying to find an exit rather than where it entered.
  */
 void findExit(cell theMaze[SIZE][SIZE], location* currentLocation,
 int* currentDirection) {
@@ -658,10 +700,19 @@ location currentLocation) {
   // update the distances starting from the current cell and neighbor cells if
   // applicable
   updateDistances(currentLocation, theMaze, neighbors);
+
+  // check if it has three walls and not the start, if so, it's dead
+  if (numWalls(theMaze[currentX][currentY].wall) == DEAD_WALLS) {
+
+    if (currentX != START_X || currentY != START_Y) {
+
+      theMaze[currentX][currentY].dead = true;
+    }
+  }
 }
 
 /**
- * Name: move()
+ * Name: toCenter()
  * Parameters: theMaze - the 2D array representing the maze, where each element
  * is a cell that has a wall and distance member.
  * currentLocation - the current location of the mouse.
@@ -671,7 +722,7 @@ location currentLocation) {
  * direction with minimum distance. If not, it will turn the mouse in the order
  * of N, E, S, W that has minimum distance.
  */
-void move(cell theMaze[SIZE][SIZE], location* currentLocation,
+void toCenter(cell theMaze[SIZE][SIZE], location* currentLocation,
 int* currentDirection) {
 
   // get the x and y position of the current location
@@ -841,11 +892,9 @@ void floodMaze(cell theMaze[SIZE][SIZE]) {
 
 int main(int argc, char* argv[]) {
 
-  location start = {3, 0};
-
   // the current direction and position of the mouse
   int currentDirection = NORTH;
-  location currentLocation = start;
+  location currentLocation = {START_X, START_Y};
 
   // sample maze
   int T = TOP_WALL;
@@ -855,16 +904,16 @@ int main(int argc, char* argv[]) {
   
   // 4 by 4 maze
   cell theMaze[SIZE][SIZE] = {
-    {{L|T, 0},   {T, 0},   {T, 0}, {R|T, 0}},
-    {{L, 0},     {0, 0},   {0, 0}, {R, 0}},
-    {{L, 0},     {0, 0},   {0, 0}, {R, 0}},
-    {{L|R|B, 0}, {L|B, 0}, {B, 0}, {R|B, 0}}
+    {{L|T, 0, false},   {T, 0, false},   {T, 0, false}, {R|T, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L|R|B, 0, false}, {L|B, 0, false}, {B, 0, false}, {R|B, 0, false}}
   };
   cell virtualMaze[SIZE][SIZE] = {
-    {{L|T, 0},    {T|B, 0},   {T|B, 0},   {R|T, 0}},
-    {{L|R, 0},    {L|T, 0},   {R|T, 0},   {L|R, 0}},
-    {{L|R, 0},    {L, 0},     {R, 0},     {L|R, 0}},
-    {{L|R|B, 0},  {L|B, 0},   {B, 0},     {R|B, 0}}
+    {{L|T, 0, false},    {T|B, 0, false},   {T|B, 0, false},   {R|T, 0, false}},
+    {{L|R, 0, false},    {L|T, 0, false},   {R|T, 0, false},   {L|R, 0, false}},
+    {{L|R, 0, false},    {L, 0, false},     {R, 0, false},     {L|R, 0, false}},
+    {{L|R|B, 0, false},  {L|B, 0, false},   {B, 0, false},     {R|B, 0, false}}
   };
 
   /** 
@@ -899,7 +948,7 @@ int main(int argc, char* argv[]) {
   while (theMaze[currentLocation.x][currentLocation.y].distance != 0) {
 
     // move to a cell, smaller value
-    move(theMaze, &currentLocation, &currentDirection);
+    toCenter(theMaze, &currentLocation, &currentDirection);
 
     // evaluate the cell to see if there are new walls, then update the
     // distances accordingly
@@ -911,4 +960,12 @@ int main(int argc, char* argv[]) {
 
   // go back to starting point
   findExit(theMaze, &currentLocation, &currentDirection);
+
+  // reverseDistance(theMaze);
+
+  /**
+  while(!(currentLocation->x == start->x && currentLocation->y == start->y)) {
+    
+    toStart(theMaze, &currentLocation, &currentDirection);
+  }*/
 }
