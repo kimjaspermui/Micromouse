@@ -21,9 +21,17 @@ struct cell {
 
 // NOTE: need static allocation instead of dynamic
 const int SIZE = 4;
+// even
 const int CENTER_MIN = SIZE / 2 - 1;
 const int CENTER_MAX = SIZE / 2;
 const int NUM_CENTERS = 4;
+
+/**
+// odd
+const int CENTER_MIN = SIZE / 2;
+const int CENTER_MAX = SIZE / 2;
+const int NUM_CENTERS = 1;
+*/
 
 // walls representations
 const int WALLS = 4;
@@ -46,7 +54,7 @@ const char directionSymbols[DIRECTIONS] = {'^', '>', 'v', '<'};
 // Helper functions start here
 
 /**
- * Name: notCenter()
+ * Name: isCenter()
  * Parameters: x - this is the x coordinate to be checked.
  * y - this is the y coordinate to be checked.
  * Description: This function will check whether or not the given coordinates
@@ -70,7 +78,7 @@ bool isCenter(int x, int y) {
 }
 
 /**
- * Name: notOut()
+ * Name: isOut()
  * Parameters: x - this is the x coordinate to be checked.
  * y - this is the y coordinate to be checked.
  * Description: This function will check whether or not the given coordinates
@@ -438,7 +446,7 @@ int currentDirection) {
 
   // check status of the maze and mouse
   printMaze(theMaze, currentLocation, currentDirection);
-  printArray(theMaze);
+  // printArray(theMaze);
 }
 
 //------------------------------------------------------------------------------
@@ -453,6 +461,60 @@ void printEnter(int enter[DIRECTIONS], location myElement) {
   }
 
   cout << endl;
+}
+
+/**
+ */
+void findExit(cell theMaze[SIZE][SIZE], location* currentLocation,
+int* currentDirection) {
+
+  // this will represent whether an exit has been found, not center and backward
+  bool found = false;
+
+  // this will keep track of the next center to go
+  int centerDirection = *currentDirection;
+
+  // while an exit has not been found, keep going
+  while (!found) {
+
+    // move one step forward (gurantee it's another center for the first time)
+    stepAtDirection(currentLocation, centerDirection);
+    *currentDirection = centerDirection;
+
+    // TODO: turn if necessary then move the mouse forward
+
+    // get the x and y positions of the current location
+    int currentX = currentLocation->x;
+    int currentY = currentLocation->y;
+
+    // check which neighbor is enterable
+    int enterableNeighbors[DIRECTIONS] = {-1, -1, -1, -1};
+    enterableCells(currentX, currentY, theMaze, enterableNeighbors);
+
+    // can't go backward center
+    enterableNeighbors[(*currentDirection + 2) % DIRECTIONS] = -1;
+
+    // for loop to check all directions
+    for (int i = 0; i < DIRECTIONS; i++) {
+
+      // if it is enterable, check if it is not center, if so, then an exit has
+      // been found
+      if (enterableNeighbors[i] != -1) {
+
+        if (enterableNeighbors[i] != 0) {
+
+          found = true;
+        }
+
+        else {
+
+          centerDirection = i;
+        }
+      }
+    }
+    
+    checkStatus(theMaze, *currentLocation, *currentDirection);
+  }
 }
 
 /**
@@ -688,7 +750,6 @@ void floodMaze(cell theMaze[SIZE][SIZE]) {
   // number of cells for this distance 
   int count = NUM_CENTERS;
 
-
   int tempCount = 0;
 
   // push all of the centers to queue
@@ -780,15 +841,19 @@ void floodMaze(cell theMaze[SIZE][SIZE]) {
 
 int main(int argc, char* argv[]) {
 
+  location start = {3, 0};
+
   // the current direction and position of the mouse
   int currentDirection = NORTH;
-  location currentLocation = {3, 0};
+  location currentLocation = start;
 
   // sample maze
   int T = TOP_WALL;
   int R = RIGHT_WALL;
   int B = BOTTOM_WALL;
   int L = LEFT_WALL;
+  
+  // 4 by 4 maze
   cell theMaze[SIZE][SIZE] = {
     {{L|T, 0},   {T, 0},   {T, 0}, {R|T, 0}},
     {{L, 0},     {0, 0},   {0, 0}, {R, 0}},
@@ -801,6 +866,24 @@ int main(int argc, char* argv[]) {
     {{L|R, 0},    {L, 0},     {R, 0},     {L|R, 0}},
     {{L|R|B, 0},  {L|B, 0},   {B, 0},     {R|B, 0}}
   };
+
+  /** 
+  // 5 by 5 maze
+  cell theMaze[SIZE][SIZE] = {
+    {{L|T, 0},   {T, 0},   {T, 0}, {T,0}, {R|T, 0}},
+    {{L, 0},     {0, 0},   {0, 0}, {0,0}, {R, 0}},
+    {{L, 0},     {0, 0},   {0, 0}, {0,0}, {R, 0}},
+    {{L,0},      {0, 0},   {0, 0}, {0,0}, {R, 0}},
+    {{L|R|B, 0}, {L|B, 0}, {B, 0}, {B,0}, {R|B, 0}}
+  };
+
+  cell virtualMaze[SIZE][SIZE] = {
+    {{L|T|B, 0},  {T|B, 0},   {T|R, 0},   {L|T, 0}, {R|T, 0}},
+    {{L|T, 0},    {T, 0},     {B, 0},     {0, 0},   {R, 0}},
+    {{L|R, 0},    {L|R, 0},   {L|T, 0},   {B, 0},   {R, 0}},
+    {{L, 0},      {R, 0},     {L, 0},     {T, 0},   {R, 0}},
+    {{L|R|B, 0},  {L|B, 0},   {R|B, 0},   {L|B, 0}, {R|B, 0}}
+  };*/
 
   // sample maze print out
   cout << "Virtual Maze:" << endl;
@@ -825,4 +908,7 @@ int main(int argc, char* argv[]) {
     // check the status through print outs
     checkStatus(theMaze, currentLocation, currentDirection);
   }
+
+  // go back to starting point
+  findExit(theMaze, &currentLocation, &currentDirection);
 }
