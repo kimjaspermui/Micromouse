@@ -21,21 +21,21 @@ struct cell {
 };
 
 // NOTE: need static allocation instead of dynamic
-const int SIZE = 4;
-// even
+const int SIZE = 5;
+/** // even
 const int CENTER_MIN = SIZE / 2 - 1;
 const int CENTER_MAX = SIZE / 2;
-const int NUM_CENTERS = 4;
+const int NUM_CENTERS = 4;*/
 
-const int START_X = 3;
+const int START_X = 4;
 const int START_Y = 0;
 
-/**
+
 // odd
 const int CENTER_MIN = SIZE / 2;
 const int CENTER_MAX = SIZE / 2;
 const int NUM_CENTERS = 1;
-*/
+
 
 // walls representations
 const int WALLS = 4;
@@ -43,6 +43,7 @@ const int TOP_WALL = 1;
 const int RIGHT_WALL = 2;
 const int BOTTOM_WALL = 4;
 const int LEFT_WALL = 8;
+const int ALL_WALLS = 15;
 const int walls[WALLS] = {1, 2, 4, 8};
 
 const int DEAD_WALLS = 3;
@@ -107,6 +108,33 @@ bool isOut(int x, int y) {
 
   // otherwise, return false
   return false;
+}
+
+/**
+ * Name: numWalls()
+ * Parameters: walls - this is the walls to be counted.
+ * Description: This function will be able to count the number of walls from the
+ * given walls.
+ * Return: An int representing the number of walls around this cell.
+ */
+int numWalls(int walls) {
+
+  // the mask to get the first bit
+  int mask = 1;
+
+  // the counter of 1's
+  int count = 0;
+
+  // for loop to count the number of walls
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    if ((walls >> i & mask) == 1) {
+
+      count++;
+    }
+  }
+
+  return count;
 }
 
 /**
@@ -335,33 +363,6 @@ stack<location>* myStack) {
 }
 
 /**
- * Name: numWalls()
- * Parameters: walls - this is the walls to be counted.
- * Description: This function will be able to count the number of walls from the
- * given walls.
- * Return: An int representing the number of walls around this cell.
- */
-int numWalls(int walls) {
-
-  // the mask to get the first bit
-  int mask = 1;
-
-  // the counter of 1's
-  int count = 0;
-
-  // for loop to count the number of walls
-  for (int i = 0; i < DIRECTIONS; i++) {
-
-    if ((walls >> i & mask) == 1) {
-
-      count++;
-    }
-  }
-
-  return count;
-}
-
-/**
  * Name: printMaze()
  * Parameters: theMaze - the 2D array representing the maze, where each element
  * is a cell that has a wall and distance member.
@@ -484,6 +485,32 @@ int currentDirection) {
   printArray(theMaze);
 }
 
+/**
+ * Name: fillWalls()
+ * Parameters: currentX - the x position of the location to be isolated.
+ * currentY - the y position of the location to be isolated.
+ * theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * Description: This function will be able to isolate the cell from other cells,
+ * by filling it with walls on all sides because it is a dead end.
+ */
+void fillWalls(int currentX, int currentY, cell theMaze[SIZE][SIZE]) {
+
+  int enterableNeighbors[DIRECTIONS] = {-1, -1, -1, -1};
+
+  enterableCells(currentX, currentY, theMaze, enterableNeighbors);
+
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    if (enterableNeighbors[i] != -1) {
+
+      updateNeighborWall(currentX, currentY, theMaze, i);
+    }
+  }
+
+  theMaze[currentX][currentY].dead = true;
+  theMaze[currentX][currentY].wall = ALL_WALLS;
+}
 //------------------------------------------------------------------------------
 // Core functions start here
 
@@ -496,25 +523,6 @@ void printEnter(int enter[DIRECTIONS], location myElement) {
   }
 
   cout << endl;
-}
-
-/**
- * Name: reverseDistance()
- * Parameters: theMaze - the 2D array representing the maze, where each element
- * is a cell that has a wall and distance member.
- * Description: This function will be able to reverse the distances of the
- * cells.
- */
-void reverseDistance(cell theMaze[SIZE][SIZE], int max) {
-
-  // for loop to update all of the distances
-  for (int i = 0; i < SIZE; i++) {
-
-    for (int j = 0; j < SIZE; j++) {
-
-      theMaze[i][j].distance = max - theMaze[i][j].distance;
-    }
-  }
 }
 
 /**
@@ -672,14 +680,15 @@ int neighbors[DIRECTIONS]) {
  * is a cell that has a wall and distance member.
  * virtualMaze - the testing maze to see where are the walls.
  * currentLocation - the current location of the mouse.
+ * deadOn - the status of a dead end to populate it to other cells.
  * Description: This function will first examine if there are new walls
  * discovered around the cell, it will update the cell's wall status
  * accordingly. Then, it wiill call the helper function to update the distances
  * starting from the current cell and the neighbor cells that have added new
- * walls.
+ * walls. It will update the deadOn status when the cell is a dead end.
  */
 void evaluateCell(cell theMaze[SIZE][SIZE], cell virtualMaze[SIZE][SIZE],
-location currentLocation) {
+location currentLocation, bool* deadOn) {
 
   // get the x and y position of the current location
   int currentX = currentLocation.x;
@@ -725,13 +734,18 @@ location currentLocation) {
 
     if (currentX != START_X || currentY != START_Y) {
 
-      theMaze[currentX][currentY].dead = true;
+      *deadOn = true;
     }
+  }
+
+  else {
+
+    *deadOn = false;
   }
 }
 
 /**
- * Name: toCenter()
+ * Name: move()
  * Parameters: theMaze - the 2D array representing the maze, where each element
  * is a cell that has a wall and distance member.
  * currentLocation - the current location of the mouse.
@@ -741,7 +755,7 @@ location currentLocation) {
  * direction with minimum distance. If not, it will turn the mouse in the order
  * of N, E, S, W that has minimum distance.
  */
-void toCenter(cell theMaze[SIZE][SIZE], location* currentLocation,
+void move(cell theMaze[SIZE][SIZE], location* currentLocation,
 int* currentDirection) {
 
   // get the x and y position of the current location
@@ -824,9 +838,9 @@ void floodMaze(cell theMaze[SIZE][SIZE]) {
 
   // push all of the centers to queue
   myQueue.push(center1);
-  myQueue.push(center2);
-  myQueue.push(center3);
-  myQueue.push(center4);
+  //myQueue.push(center2);
+  //myQueue.push(center3);
+  //myQueue.push(center4);
 
   // while loop to update all of the cell's distaces
   while (!myQueue.empty()) {
@@ -921,6 +935,7 @@ int main(int argc, char* argv[]) {
   int B = BOTTOM_WALL;
   int L = LEFT_WALL;
   
+  /**
   // 4 by 4 maze
   cell theMaze[SIZE][SIZE] = {
     {{L|T, 0, false},   {T, 0, false},   {T, 0, false}, {R|T, 0, false}},
@@ -933,9 +948,9 @@ int main(int argc, char* argv[]) {
     {{L|R, 0, false},    {L|T, 0, false},   {R|T, 0, false},   {L|R, 0, false}},
     {{L|R, 0, false},    {L, 0, false},     {R, 0, false},     {L|R, 0, false}},
     {{L|R|B, 0, false},  {L|B, 0, false},   {B, 0, false},     {R|B, 0, false}}
-  };
+  };*/
 
-  /** 
+  
   // 5 by 5 maze
   cell theMaze[SIZE][SIZE] = {
     {{L|T, 0},   {T, 0},   {T, 0}, {T,0}, {R|T, 0}},
@@ -951,7 +966,12 @@ int main(int argc, char* argv[]) {
     {{L|R, 0},    {L|R, 0},   {L|T, 0},   {B, 0},   {R, 0}},
     {{L, 0},      {R, 0},     {L, 0},     {T, 0},   {R, 0}},
     {{L|R|B, 0},  {L|B, 0},   {R|B, 0},   {L|B, 0}, {R|B, 0}}
-  };*/
+  };
+
+  bool deadOn = false;
+
+  int previousX = 0;
+  int previousY = 0;
 
   // sample maze print out
   cout << "Virtual Maze:" << endl;
@@ -967,7 +987,35 @@ int main(int argc, char* argv[]) {
   while (theMaze[currentLocation.x][currentLocation.y].distance != 0) {
 
     // move to a cell, smaller value
-    toCenter(theMaze, &currentLocation, &currentDirection);
+    move(theMaze, &currentLocation, &currentDirection);
+
+    if (deadOn) {
+
+      fillWalls(previousX, previousY, theMaze);
+    }
+
+    // evaluate the cell to see if there are new walls, then update the
+    // distances accordingly
+    evaluateCell(theMaze, virtualMaze, currentLocation, &deadOn);
+    
+    if (deadOn) {
+
+      previousX = currentLocation.x;
+      previousY = currentLocation.y;
+    }
+
+    // check the status through print outs
+    checkStatus(theMaze, currentLocation, currentDirection);
+  }
+
+  // go back to starting point
+  //findExit(theMaze, &currentLocation, &currentDirection);
+
+  /**
+  while(!(currentLocation->x == start->x && currentLocation->y == start->y)) {
+    
+    // move to a cell, smaller value
+    move(theMaze, &currentLocation, &currentDirection);
 
     // evaluate the cell to see if there are new walls, then update the
     // distances accordingly
@@ -975,22 +1023,5 @@ int main(int argc, char* argv[]) {
     
     // check the status through print outs
     checkStatus(theMaze, currentLocation, currentDirection);
-  }
-
-  // go back to starting point
-  findExit(theMaze, &currentLocation, &currentDirection);
-
-  int shortestDistance = theMaze[START_X][START_Y].distance;
-
-  // reverse the distances of all the cell
-  reverseDistance(theMaze, shortestDistance);
-
-  checkStatus(theMaze, currentLocation, currentDirection);
-
-  // fill in dead ends
-  /**
-  while(!(currentLocation->x == start->x && currentLocation->y == start->y)) {
-    
-    toStart(theMaze, &currentLocation, &currentDirection);
   }*/
 }
