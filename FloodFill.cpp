@@ -56,6 +56,9 @@ const int WEST = 3;
 const string directions[DIRECTIONS] = {"North", "East", "South", "West"};
 const char directionSymbols[DIRECTIONS] = {'^', '>', 'v', '<'};
 
+// maximum number of elements in the stack
+const int MAX_STACK = 257;
+
 //------------------------------------------------------------------------------
 // Helper functions start here
 
@@ -603,7 +606,8 @@ int neighbors[DIRECTIONS]) {
   int currentY = currentLocation.y;
 
   // stack to store the potentially changing cell's distance
-  stack<location> myStack;
+  location myStack2[MAX_STACK] = {0};
+  //stack<location> myStack;
 
   // push the current cell
   myStack.push(currentLocation);
@@ -1071,19 +1075,23 @@ int main(int argc, char* argv[]) {
   }
 
   // go back to starting point
-  // findExit(theMaze, &currentLocation, &currentDirection);
+  bool foundExit = false;
 
+  // while the exit has not found, then keep going
   /**
-  while(!(currentLocation->x == start->x && currentLocation->y == start->y)) {
+  while (!foundExit) {
     
-    // move to a cell, smaller value
-    move(theMaze, &currentLocation, &currentDirection);
-
+    foundExit = findExit(theMaze, &currentLocation, &currentDirection);
+    
     // evaluate the cell to see if there are new walls, then update the
     // distances accordingly
-    evaluateCell(theMaze, virtualMaze, currentLocation);
-    
+    evaluateCell(theMaze, virtualMaze, currentLocation, &deadOn);
+
     // check the status through print outs
     checkStatus(theMaze, currentLocation, currentDirection);
   }*/
+
+  // go 16 by 16 steps
+
+  // start from the beginning
 }
