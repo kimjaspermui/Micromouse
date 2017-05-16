@@ -1,7 +1,6 @@
-#include <utility>
-#include <queue>
+//#include <utility>
+// #include <queue>
 #include <stack>
-#include <vector>
 #include <iostream>
 
 using namespace std;
@@ -18,23 +17,25 @@ struct cell {
   int wall;
   int distance;
   bool dead;
+  bool visited;
 };
 
 // NOTE: need static allocation instead of dynamic
-const int SIZE = 5;
-/** // even
+const int SIZE = 16;
+
+// even
 const int CENTER_MIN = SIZE / 2 - 1;
 const int CENTER_MAX = SIZE / 2;
-const int NUM_CENTERS = 4;*/
+const int NUM_CENTERS = 4;
 
-const int START_X = 4;
+const int START_X = 15;
 const int START_Y = 0;
 
-
+/**
 // odd
 const int CENTER_MIN = SIZE / 2;
 const int CENTER_MAX = SIZE / 2;
-const int NUM_CENTERS = 1;
+const int NUM_CENTERS = 1;*/
 
 
 // walls representations
@@ -813,6 +814,7 @@ int* currentDirection) {
 void floodMaze(cell theMaze[SIZE][SIZE]) {
 
   // constants for neighbors searching
+  /**
   const int NUM_NEIGHBORS = 4;
   const int TOP = 0;
   const int RIGHT = 1;
@@ -838,9 +840,9 @@ void floodMaze(cell theMaze[SIZE][SIZE]) {
 
   // push all of the centers to queue
   myQueue.push(center1);
-  //myQueue.push(center2);
-  //myQueue.push(center3);
-  //myQueue.push(center4);
+  myQueue.push(center2);
+  myQueue.push(center3);
+  myQueue.push(center4);
 
   // while loop to update all of the cell's distaces
   while (!myQueue.empty()) {
@@ -920,7 +922,7 @@ void floodMaze(cell theMaze[SIZE][SIZE]) {
       // increment the currentDistance
       currentDistance++;
     }
-  }
+  }*/
 }
 
 int main(int argc, char* argv[]) {
@@ -950,7 +952,7 @@ int main(int argc, char* argv[]) {
     {{L|R|B, 0, false},  {L|B, 0, false},   {B, 0, false},     {R|B, 0, false}}
   };*/
 
-  
+  /**
   // 5 by 5 maze
   cell theMaze[SIZE][SIZE] = {
     {{L|T, 0},   {T, 0},   {T, 0}, {T,0}, {R|T, 0}},
@@ -966,6 +968,65 @@ int main(int argc, char* argv[]) {
     {{L|R, 0},    {L|R, 0},   {L|T, 0},   {B, 0},   {R, 0}},
     {{L, 0},      {R, 0},     {L, 0},     {T, 0},   {R, 0}},
     {{L|R|B, 0},  {L|B, 0},   {R|B, 0},   {L|B, 0}, {R|B, 0}}
+  };*/
+
+  
+  // 16 by 16
+  /**
+  cell theMaze[SIZE][SIZE] = {
+    {{L|T, 0, false},   {T, 0, false},   {T, 0, false}, {T, 0, false},   {T, 0, false}, {T, 0, false},   {T, 0, false}, {T, 0, false},   {T, 0, false}, {T, 0, false},   {T, 0, false}, {T, 0, false},   {T, 0, false}, {T, 0, false},   {T, 0, false}, {R|T, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {0, 0, false},   {0, 0, false}, {R, 0, false}},
+    {{L|R|B, 0, false}, {L|B, 0, false}, {B, 0, false}, {B, 0, false},   {B, 0, false}, {B, 0, false},   {B, 0, false}, {B, 0, false},   {B, 0, false}, {B, 0, false},   {B, 0, false}, {B, 0, false},   {B, 0, false}, {B, 0, false},   {B, 0, false}, {R|B, 0, false}}
+  };*/
+  cell theMaze[SIZE][SIZE] = {
+    {{9,14,0}, {1,13,0}, {1,12,0}, {1,11,0}, {1,10,0}, {1,9,0}, {1,8,0}, {1,7,0}, {1,7,0}, {1,8,0}, {1,9,0}, {1,10,0}, {1,11,0}, {1,12,0}, {1,13,0}, {3,14,0}},
+    {{8,13,0}, {0,12,0}, {0,11,0}, {0,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {0,10,0}, {0,11,0}, {0,12,0}, {2,13,0}},
+    {{8,12,0}, {0,11,0}, {0,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,5,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {0,10,0}, {0,11,0}, {2,12,0}},
+    {{8,11,0}, {0,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,4,0}, {0,5,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {0,10,0}, {2,11,0}},
+    {{8,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,3,0}, {0,3,0}, {0,4,0}, {0,5,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {2,10,0}},
+    {{8,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,3,0}, {0,2,0}, {0,2,0}, {0,3,0}, {0,4,0}, {0,5,0}, {0,6,0}, {0,7,0}, {0,8,0}, {2,9,0}},
+    {{8,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,3,0}, {0,2,0}, {0,1,0}, {0,1,0}, {0,2,0}, {0,3,0}, {0,4,0}, {0,5,0}, {0,6,0}, {0,7,0}, {2,8,0}},
+    {{8,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,3,0}, {0,2,0}, {0,1,0}, {0,0,0}, {0,0,0}, {0,1,0}, {0,2,0}, {0,3,0}, {0,4,0}, {0,5,0}, {0,6,0}, {2,7,0}},
+    {{8,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,3,0}, {0,2,0}, {0,1,0}, {0,0,0}, {0,0,0}, {0,1,0}, {0,2,0}, {0,3,0}, {0,4,0}, {0,5,0}, {0,6,0}, {2,7,0}},
+    {{8,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,3,0}, {0,2,0}, {0,1,0}, {0,1,0}, {0,2,0}, {0,3,0}, {0,4,0}, {0,5,0}, {0,6,0}, {0,7,0}, {2,8,0}},
+    {{8,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,3,0}, {0,2,0}, {0,2,0}, {0,3,0}, {0,4,0}, {0,5,0}, {0,6,0}, {0,7,0}, {0,8,0}, {2,9,0}},
+    {{8,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,3,0}, {0,3,0}, {0,4,0}, {0,5,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {2,10,0}},
+    {{8,11,0}, {0,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,4,0}, {0,5,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {0,10,0}, {2,11,0}},
+    {{8,12,0}, {0,11,0}, {0,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,5,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {0,10,0}, {0,11,0}, {2,12,0}},
+    {{8,13,0}, {0,12,0}, {0,11,0}, {0,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {0,10,0}, {0,11,0}, {0,12,0}, {2,13,0}},
+    {{14,14,0}, {12,13,0}, {4,12,0}, {4,11,0}, {4,10,0}, {4,9,0}, {4,8,0}, {4,7,0}, {4,7,0}, {4,8,0}, {4,9,0}, {4,10,0}, {4,11,0}, {4,12,0}, {4,13,0}, {6,14,0}}
+  };
+
+  cell virtualMaze[SIZE][SIZE] = {
+    {{L|T, 0, false},   {T|B, 0, false},   {T|B, 0, false}, {T|B, 0, false},   {T|B, 0, false}, {T|B, 0, false},   {T, 0, false}, {T, 0, false},   {T|B, 0, false}, {T|B, 0, false},   {T|B, 0, false}, {T, 0, false},   {T, 0, false}, {T, 0, false},   {T, 0, false}, {R|T, 0, false}},
+    {{L, 0, false},     {T|R, 0, false},   {T|L, 0, false}, {T, 0, false},   {T|B, 0, false}, {T|R|B, 0, false},   {L|R, 0, false}, {L, 0, false},   {T|R, 0, false}, {T|L, 0, false},   {T|R, 0, false}, {L|R|B, 0, false},   {L|R|B, 0, false}, {L|R, 0, false},   {L|R, 0, false}, {L|R, 0, false}},
+    {{L|R, 0, false},     {L|R, 0, false},   {L|R, 0, false}, {L|B, 0, false},   {T|B, 0, false}, {T|R, 0, false},   {L, 0, false}, {R, 0, false},   {L, 0, false}, {R|B, 0, false},   {L, 0, false}, {T, 0, false},   {T|B, 0, false}, {0, 0, false},   {R, 0, false}, {L|R, 0, false}},
+    {{L|R, 0, false},     {L|R, 0, false},   {L|B, 0, false}, {T, 0, false},   {T|R|B, 0, false}, {L|R, 0, false},   {L|R, 0, false}, {L, 0, false},   {R|B, 0, false}, {T|L, 0, false},   {R|B, 0, false}, {L, 0, false},   {T, 0, false}, {R|B, 0, false},   {L|R, 0, false}, {L|R, 0, false}},
+    {{L|R, 0, false},     {L, 0, false},   {T|R|B, 0, false}, {L|R, 0, false},   {T|L|B, 0, false}, {R, 0, false},   {L|B, 0, false}, {B, 0, false},   {T|B, 0, false}, {R|B, 0, false},   {T|L, 0, false}, {R, 0, false},   {L|R, 0, false}, {T|L, 0, false},   {R|B, 0, false}, {L|R, 0, false}},
+    {{L|B, 0, false},     {0, 0, false},   {T|R|B, 0, false}, {L|B, 0, false},   {T|R, 0, false}, {L|R|B, 0, false},   {T|L, 0, false}, {T|B, 0, false},   {T|B, 0, false}, {T, 0, false},   {R, 0, false}, {L|R, 0, false},   {L, 0, false}, {R|B, 0, false},   {T|L, 0, false}, {R|B, 0, false}},
+    {{L|T|B, 0, false},     {0, 0, false},   {T|B, 0, false}, {T|B, 0, false},   {R|B, 0, false}, {T|L, 0, false},   {B, 0, false}, {T|B, 0, false},   {T|B, 0, false}, {R, 0, false},   {L|B, 0, false}, {0, 0, false},   {R, 0, false}, {T|L|B, 0, false},   {R, 0, false}, {T|L|R|B, 0, false}},
+    {{L|T|B, 0, false},     {0, 0, false},   {T|R|B, 0, false}, {T|L, 0, false},   {T|R, 0, false}, {L, 0, false},   {T|R, 0, false}, {T|L, 0, false},   {T|R, 0, false}, {L|R|B, 0, false},   {T|L, 0, false}, {R, 0, false},   {L|R|B, 0, false}, {T|L|B, 0, false},   {B, 0, false}, {T|R, 0, false}},
+    {{L|T|B, 0, false},     {0, 0, false},   {T|R|B, 0, false}, {L|R, 0, false},   {L|R, 0, false}, {L|R, 0, false},   {L|R, 0, false}, {L, 0, false},   {R|B, 0, false}, {T|L, 0, false},   {R, 0, false}, {L|R|B, 0, false},   {T|L, 0, false}, {T|R, 0, false},   {T|L, 0, false}, {R, 0, false}},
+    {{L|T|R, 0, false},     {L|B, 0, false},   {T|R, 0, false}, {L|R, 0, false},   {L|R, 0, false}, {L|B, 0, false},   {0, 0, false}, {R|B, 0, false},   {T|L, 0, false}, {R, 0, false},   {L|R|B, 0, false}, {T|L, 0, false},   {R, 0, false}, {L|B, 0, false},   {R|B, 0, false}, {L|R, 0, false}},
+    {{L|R, 0, false},     {T|L|B, 0, false},   {B, 0, false}, {R, 0, false},   {L, 0, false}, {T|R, 0, false},   {L|B, 0, false}, {T|B, 0, false},   {R|B, 0, false}, {L|R|B, 0, false},   {T|L, 0, false}, {R, 0, false},   {L|R|B, 0, false}, {T|L|B, 0, false},   {T|B, 0, false}, {R, 0, false}},
+    {{L|R, 0, false},     {T|L, 0, false},   {T|R|B, 0, false}, {L|B, 0, false},   {R, 0, false}, {L|R, 0, false},   {T|L|R, 0, false}, {T|L|R, 0, false},   {T|L, 0, false}, {T|R, 0, false},   {L|R, 0, false}, {L|R, 0, false},   {T|L, 0, false}, {T, 0, false},   {T|B, 0, false}, {R, 0, false}},
+    {{L|R, 0, false},     {L, 0, false},   {T|R|B, 0, false}, {T|L, 0, false},   {R, 0, false}, {L|B, 0, false},   {R, 0, false}, {L|R, 0, false},   {L|R, 0, false}, {L|B, 0, false},   {R|B, 0, false}, {L, 0, false},   {R, 0, false}, {L|R|B, 0, false},   {T|L|B, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {R|B, 0, false},   {T|L, 0, false}, {R|B, 0, false},   {L|R, 0, false}, {T|L|R, 0, false},   {L, 0, false}, {R|B, 0, false},   {L|R, 0, false}, {T|L|R, 0, false},   {T|L, 0, false}, {R|B, 0, false},   {L|B, 0, false}, {T|R, 0, false},   {T|L|B, 0, false}, {R, 0, false}},
+    {{L, 0, false},     {T, 0, false},   {B, 0, false}, {T|R|B, 0, false},   {L|R, 0, false}, {L|R, 0, false},   {L|R, 0, false}, {T|L, 0, false},   {R|B, 0, false}, {L|R, 0, false},   {L|B, 0, false}, {T|R, 0, false},   {T|L, 0, false}, {B, 0, false},   {T, 0, false}, {R|B, 0, false}},
+    {{L|R|B, 0, false}, {L|B, 0, false}, {T|B, 0, false}, {T|B, 0, false},   {B, 0, false}, {B, 0, false},   {B, 0, false}, {B, 0, false},   {T|B, 0, false}, {B, 0, false},   {T|B, 0, false}, {B, 0, false},   {B, 0, false}, {T|B, 0, false},   {B, 0, false}, {T|R|B, 0, false}}
   };
 
   bool deadOn = false;
@@ -977,11 +1038,12 @@ int main(int argc, char* argv[]) {
   cout << "Virtual Maze:" << endl;
   printMaze(virtualMaze, currentLocation, currentDirection);
 
-  cout << endl << "Initial Maze: " << endl;
-  printMaze(theMaze, currentLocation, currentDirection);
-
+  // Manually Initialized Maze
   // flood the maze with initial distance
-  floodMaze(theMaze);
+  // floodMaze(theMaze);
+  
+  cout << endl << "Initial Maze: " << endl;
+  checkStatus(theMaze, currentLocation, currentDirection);
 
   // keep moving until 0 has been found
   while (theMaze[currentLocation.x][currentLocation.y].distance != 0) {
