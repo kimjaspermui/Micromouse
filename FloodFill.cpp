@@ -35,7 +35,6 @@ const int CENTER_MIN = SIZE / 2;
 const int CENTER_MAX = SIZE / 2;
 const int NUM_CENTERS = 1;*/
 
-
 // walls representations
 const int WALLS = 4;
 const int TOP_WALL = 1;
@@ -692,7 +691,7 @@ location currentLocation, bool* deadOn) {
   int currentX = currentLocation.x;
   int currentY = currentLocation.y;
 
-  // TODO: request for new walls status
+  // TODO: get wall status from input (replace virtual maze)
   // get the status of the wall at the current location
   int *currentWalls = &(theMaze[currentX][currentY].wall);
   int actualWalls = virtualMaze[currentX][currentY].wall;
@@ -756,6 +755,8 @@ location currentLocation, bool* deadOn) {
 void move(cell theMaze[SIZE][SIZE], location* currentLocation,
 int* currentDirection) {
 
+  // TODO: make this function returnable, return a direction to step in
+
   // get the x and y position of the current location
   int currentX = currentLocation->x;
   int currentY = currentLocation->y;
@@ -799,6 +800,8 @@ int* currentDirection) {
 
     // TODO: turn to this direction, then take a step
   }
+
+  theMaze[currentLocation->x][currentLocation->y].visited = true;
 }
 
 /**
@@ -967,7 +970,6 @@ int main(int argc, char* argv[]) {
     {{L|R|B, 0},  {L|B, 0},   {R|B, 0},   {L|B, 0}, {R|B, 0}}
   };*/
 
-  
   // 16 by 16
   /**
   cell theMaze[SIZE][SIZE] = {
@@ -1004,7 +1006,7 @@ int main(int argc, char* argv[]) {
     {{8,11,0}, {0,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,4,0}, {0,4,0}, {0,5,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {0,10,0}, {2,11,0}},
     {{8,12,0}, {0,11,0}, {0,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,5,0}, {0,5,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {0,10,0}, {0,11,0}, {2,12,0}},
     {{8,13,0}, {0,12,0}, {0,11,0}, {0,10,0}, {0,9,0}, {0,8,0}, {0,7,0}, {0,6,0}, {0,6,0}, {0,7,0}, {0,8,0}, {0,9,0}, {0,10,0}, {0,11,0}, {0,12,0}, {2,13,0}},
-    {{14,14,0}, {12,13,0}, {4,12,0}, {4,11,0}, {4,10,0}, {4,9,0}, {4,8,0}, {4,7,0}, {4,7,0}, {4,8,0}, {4,9,0}, {4,10,0}, {4,11,0}, {4,12,0}, {4,13,0}, {6,14,0}}
+    {{14,14,1}, {12,13,0}, {4,12,0}, {4,11,0}, {4,10,0}, {4,9,0}, {4,8,0}, {4,7,0}, {4,7,0}, {4,8,0}, {4,9,0}, {4,10,0}, {4,11,0}, {4,12,0}, {4,13,0}, {6,14,0}}
   };
 
   cell virtualMaze[SIZE][SIZE] = {
@@ -1026,6 +1028,7 @@ int main(int argc, char* argv[]) {
     {{L|R|B, 0, false}, {L|B, 0, false}, {T|B, 0, false}, {T|B, 0, false},   {B, 0, false}, {B, 0, false},   {B, 0, false}, {B, 0, false},   {T|B, 0, false}, {B, 0, false},   {T|B, 0, false}, {B, 0, false},   {B, 0, false}, {T|B, 0, false},   {B, 0, false}, {T|R|B, 0, false}}
   };
 
+  // true when we need to fill the cell with all walls
   bool deadOn = false;
 
   int previousX = 0;
@@ -1068,7 +1071,7 @@ int main(int argc, char* argv[]) {
   }
 
   // go back to starting point
-  //findExit(theMaze, &currentLocation, &currentDirection);
+  // findExit(theMaze, &currentLocation, &currentDirection);
 
   /**
   while(!(currentLocation->x == start->x && currentLocation->y == start->y)) {
