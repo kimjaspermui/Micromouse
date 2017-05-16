@@ -1,4 +1,3 @@
-//#include <utility>
 // #include <queue>
 #include <stack>
 #include <iostream>
@@ -16,7 +15,6 @@ struct cell {
 
   int wall;
   int distance;
-  bool dead;
   bool visited;
 };
 
@@ -462,7 +460,7 @@ void printArray(cell theMaze[SIZE][SIZE]) {
     for (int j = 0; j < SIZE; j++) {
 
       printf("(%2d,%2d,%d)", theMaze[i][j].wall, theMaze[i][j].distance,
-      theMaze[i][j].dead);
+      theMaze[i][j].visited);
     }
 
     cout << endl;
@@ -509,7 +507,6 @@ void fillWalls(int currentX, int currentY, cell theMaze[SIZE][SIZE]) {
     }
   }
 
-  theMaze[currentX][currentY].dead = true;
   theMaze[currentX][currentY].wall = ALL_WALLS;
 }
 //------------------------------------------------------------------------------
