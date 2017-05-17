@@ -1,5 +1,5 @@
 // #include <queue>
-#include <stack>
+// #include <stack>
 #include <iostream>
 
 using namespace std;
@@ -61,6 +61,26 @@ const int MAX_STACK = 257;
 
 //------------------------------------------------------------------------------
 // Helper functions start here
+
+location popStack(location myStack[MAX_STACK], int* top) {
+
+  location returnElement = myStack[*top];
+
+  myStack[*top].x = 0;
+  myStack[*top].y = 0;
+
+  *top = *top - 1;
+
+  return returnElement;
+}
+
+void pushStack(location myStack[MAX_STACK], int* top, location newElement) {
+
+  *top = *top + 1;
+
+  myStack[*top].x = newElement.x;
+  myStack[*top].y = newElement.y;
+}
 
 /**
  * Name: isCenter()
@@ -325,7 +345,7 @@ int direction) {
  * neighbor that is not out of bounds.
  */
 void populateStack(int currentX, int currentY, int direction,
-stack<location>* myStack) {
+location myStack[MAX_STACK], int* top) {
 
   switch (direction) {
 
@@ -333,7 +353,8 @@ stack<location>* myStack) {
       
       if (!isOut(currentX - 1, currentY)) {
 
-        myStack->push({currentX - 1, currentY});
+        // myStack->push({currentX - 1, currentY});
+        pushStack(myStack, top, {currentX - 1, currentY});
       }
       break;
 
@@ -341,7 +362,8 @@ stack<location>* myStack) {
       
       if (!isOut(currentX, currentY + 1)) {
 
-        myStack->push({currentX, currentY + 1});
+        // myStack->push({currentX, currentY + 1});
+        pushStack(myStack, top, {currentX, currentY + 1});
       }
       break;
 
@@ -349,7 +371,8 @@ stack<location>* myStack) {
       
       if (!isOut(currentX + 1, currentY)) {
 
-        myStack->push({currentX + 1, currentY});
+        // myStack->push({currentX + 1, currentY});
+        pushStack(myStack, top, {currentX + 1, currentY});
       }
       break;
 
@@ -357,7 +380,8 @@ stack<location>* myStack) {
       
       if (!isOut(currentX, currentY - 1)) {
 
-        myStack->push({currentX, currentY - 1});
+        // myStack->push({currentX, currentY - 1});
+        pushStack(myStack, top, {currentX, currentY - 1});
       }
       break;
   }
@@ -606,11 +630,13 @@ int neighbors[DIRECTIONS]) {
   int currentY = currentLocation.y;
 
   // stack to store the potentially changing cell's distance
-  location myStack2[MAX_STACK] = {0};
   //stack<location> myStack;
+  location myStack[MAX_STACK] = {0};
+  int top = -1;
 
   // push the current cell
-  myStack.push(currentLocation);
+  // myStack.push(currentLocation);
+  pushStack(myStack, &top, currentLocation);
 
   // iterate through all directions
   for (int i = 0; i < DIRECTIONS; i++) {
@@ -619,7 +645,7 @@ int neighbors[DIRECTIONS]) {
     if (neighbors[i] == 1) {
 
       // push the neighbor if it's valid, if so, add it to stack
-      populateStack(currentX, currentY, i, &myStack);
+      populateStack(currentX, currentY, i, myStack, &top);
     }
   }
 
@@ -627,11 +653,12 @@ int neighbors[DIRECTIONS]) {
   location myElement;
 
   // update while there is element in stack
-  while (!myStack.empty()) {
+  while (top != -1) {
 
     // get the top element
-    myElement = myStack.top();
-    myStack.pop();
+    // myElement = myStack.top();
+    // myStack.pop();
+    myElement = popStack(myStack, &top);
 
     // the x and y positions of the current element
     int tempX = myElement.x;
@@ -668,7 +695,7 @@ int neighbors[DIRECTIONS]) {
         // if it's not -1, then it's reachable
         if (enterableNeighbors[i] != -1) {
 
-          populateStack(tempX, tempY, i, &myStack);
+          populateStack(tempX, tempY, i, myStack, &top);
         }
       }
     }
