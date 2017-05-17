@@ -549,21 +549,6 @@ void printEnter(int enter[DIRECTIONS], location myElement) {
 }
 
 /**
- * Name: findExit()
- * Parameters: theMaze - the 2D array representing the maze, where each element
- * is a cell that has a wall and distance member.
- * currentLocation - the current location of the mouse.
- * currentDirection - the current direction of the mouse.
- * Description: This function will be used only when the mouse is at the center,
- * and when it is trying to find an exit rather than where it entered.
- */
-void fillCenter(cell theMaze[SIZE][SIZE], location* currentLocation,
-int* currentDirection) {
-
-  
-}
-
-/**
  * Name: updateDistances()
  * Parameters: currentLocation - the location of the current that is being
  * examined.
@@ -788,6 +773,50 @@ int* currentDirection) {
     // TODO: turn to this direction, then take a step
     return index;
   }
+}
+
+/**
+ * Name: fillCenter()
+ * Parameters: theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * currentLocation - the current location of the mouse.
+ * currentDirection - the current direction of the mouse.
+ * Description: This function will run through the center of the maze, but not
+ * actually moving the mouse in order to fill the walls and update the
+ * distances.
+ */
+void fillCenter(cell theMaze[SIZE][SIZE], location* currentLocation,
+int* currentDirection) {
+
+  // walls
+  int T = TOP_WALL;
+  int R = RIGHT_WALL;
+  int B = BOTTOM_WALL;
+  int L = LEFT_WALL;
+
+  location centers[WALLS] = {{7, 7}, {7, 8}, {8, 7}, {8, 8}};
+  int walls[WALLS] = {L|T, T|R, L|B, R|B};
+
+  int currentCenter = 0;
+  bool tempBool = false;
+
+  for (int i = 0; i < WALLS; i++) {
+
+    if (centers[i].x != currentLocation->x ||
+    centers[i].y != currentLocation->y) {
+
+      // evaluate the cell to see if there are new walls, then update the
+      // distances accordingly
+      evaluateCell(theMaze, walls[i], centers[i], &tempBool);
+
+      // check the status through print outs
+      checkStatus(theMaze, *currentLocation, *currentDirection);
+
+      theMaze[centers[i].x][centers[i].y].visited = true;
+    }
+  }
+
+  *currentDirection = *currentDirection + 2 % DIRECTIONS;
 }
 
 /**
@@ -1057,14 +1086,11 @@ int main(int argc, char* argv[]) {
     checkStatus(theMaze, currentLocation, currentDirection);
   }
     
-  //fillCenter(theMaze, &currentLocation, &currentDirection);
-  
-  // evaluate the cell to see if there are new walls, then update the
-  // distances accordingly
-  //evaluateCell(theMaze, virtualMaze, currentLocation, &deadOn);
+  fillCenter(theMaze, &currentLocation, &currentDirection);
 
-  // check the status through print outs
-  //checkStatus(theMaze, currentLocation, currentDirection);
+  // TODO: turn 180 here
+  checkStatus(theMaze, currentLocation, currentDirection);
+
 
   // go 16 by 16 steps
 
