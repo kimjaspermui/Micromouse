@@ -10,7 +10,6 @@ struct location {
   int y;
 };
 
-// need visited member?
 struct cell {
 
   int wall;
@@ -558,56 +557,10 @@ void printEnter(int enter[DIRECTIONS], location myElement) {
  * Description: This function will be used only when the mouse is at the center,
  * and when it is trying to find an exit rather than where it entered.
  */
-void findExit(cell theMaze[SIZE][SIZE], location* currentLocation,
+void fillCenter(cell theMaze[SIZE][SIZE], location* currentLocation,
 int* currentDirection) {
 
-  // this will represent whether an exit has been found, not center and backward
-  bool found = false;
-
-  // this will keep track of the next center to go
-  int centerDirection = *currentDirection;
-
-  // while an exit has not been found, keep going
-  while (!found) {
-
-    // move one step forward (gurantee it's another center for the first time)
-    stepAtDirection(currentLocation, centerDirection);
-    *currentDirection = centerDirection;
-
-    // TODO: turn if necessary then move the mouse forward
-
-    // get the x and y positions of the current location
-    int currentX = currentLocation->x;
-    int currentY = currentLocation->y;
-
-    // check which neighbor is enterable
-    int enterableNeighbors[DIRECTIONS] = {-1, -1, -1, -1};
-    enterableCells(currentX, currentY, theMaze, enterableNeighbors);
-
-    // can't go backward center
-    enterableNeighbors[(*currentDirection + 2) % DIRECTIONS] = -1;
-
-    // for loop to check all directions
-    for (int i = 0; i < DIRECTIONS; i++) {
-
-      // if it is enterable, check if it is not center, if so, then an exit has
-      // been found
-      if (enterableNeighbors[i] != -1) {
-
-        if (enterableNeighbors[i] != 0) {
-
-          found = true;
-        }
-
-        else {
-
-          centerDirection = i;
-        }
-      }
-    }
-    
-    checkStatus(theMaze, *currentLocation, *currentDirection);
-  }
+  
 }
 
 /**
@@ -715,17 +668,15 @@ int neighbors[DIRECTIONS]) {
  * starting from the current cell and the neighbor cells that have added new
  * walls. It will update the deadOn status when the cell is a dead end.
  */
-void evaluateCell(cell theMaze[SIZE][SIZE], cell virtualMaze[SIZE][SIZE],
+void evaluateCell(cell theMaze[SIZE][SIZE], int actualWalls,
 location currentLocation, bool* deadOn) {
 
   // get the x and y position of the current location
   int currentX = currentLocation.x;
   int currentY = currentLocation.y;
 
-  // TODO: get wall status from input (replace virtual maze)
   // get the status of the wall at the current location
   int *currentWalls = &(theMaze[currentX][currentY].wall);
-  int actualWalls = virtualMaze[currentX][currentY].wall;
 
   // this will keep track which neighbors should be put into the stack for
   // distance update
@@ -783,10 +734,8 @@ location currentLocation, bool* deadOn) {
  * direction with minimum distance. If not, it will turn the mouse in the order
  * of N, E, S, W that has minimum distance.
  */
-void move(cell theMaze[SIZE][SIZE], location* currentLocation,
+int move(cell theMaze[SIZE][SIZE], location* currentLocation,
 int* currentDirection) {
-
-  // TODO: make this function returnable, return a direction to step in
 
   // get the x and y position of the current location
   int currentX = currentLocation->x;
@@ -804,10 +753,14 @@ int* currentDirection) {
   // check if the next cell of current direction has minimum distance
   if (enterableNeighbors[*currentDirection] == minDistance) {
 
-    // TODO: Move mouse straight one step
-
     // check the current direction then go straight
     stepAtDirection(currentLocation, *currentDirection);
+
+    // mark this cell as visited
+    theMaze[currentLocation->x][currentLocation->y].visited = true;
+
+    // TODO: Move mouse straight one step
+    return *currentDirection;
   }
 
   // otherwise, find the earliest direction then turn that way and move
@@ -829,10 +782,12 @@ int* currentDirection) {
     // update the direction
     *currentDirection = index;
 
-    // TODO: turn to this direction, then take a step
-  }
+    // mark this cell cell as visited
+    theMaze[currentLocation->x][currentLocation->y].visited = true;
 
-  theMaze[currentLocation->x][currentLocation->y].visited = true;
+    // TODO: turn to this direction, then take a step
+    return index;
+  }
 }
 
 /**
@@ -1089,7 +1044,8 @@ int main(int argc, char* argv[]) {
 
     // evaluate the cell to see if there are new walls, then update the
     // distances accordingly
-    evaluateCell(theMaze, virtualMaze, currentLocation, &deadOn);
+    evaluateCell(theMaze, virtualMaze[currentLocation.x][currentLocation.y].wall,
+    currentLocation, &deadOn);
     
     if (deadOn) {
 
@@ -1100,23 +1056,15 @@ int main(int argc, char* argv[]) {
     // check the status through print outs
     checkStatus(theMaze, currentLocation, currentDirection);
   }
-
-  // go back to starting point
-  bool foundExit = false;
-
-  // while the exit has not found, then keep going
-  /**
-  while (!foundExit) {
     
-    foundExit = findExit(theMaze, &currentLocation, &currentDirection);
-    
-    // evaluate the cell to see if there are new walls, then update the
-    // distances accordingly
-    evaluateCell(theMaze, virtualMaze, currentLocation, &deadOn);
+  //fillCenter(theMaze, &currentLocation, &currentDirection);
+  
+  // evaluate the cell to see if there are new walls, then update the
+  // distances accordingly
+  //evaluateCell(theMaze, virtualMaze, currentLocation, &deadOn);
 
-    // check the status through print outs
-    checkStatus(theMaze, currentLocation, currentDirection);
-  }*/
+  // check the status through print outs
+  //checkStatus(theMaze, currentLocation, currentDirection);
 
   // go 16 by 16 steps
 
