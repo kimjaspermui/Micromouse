@@ -629,7 +629,7 @@ int currentDirection) {
 
   // check status of the maze and mouse
   printMaze(theMaze, currentLocation, currentDirection);
-  printArray(theMaze);
+  // printArray(theMaze);
 }
 
 /**
@@ -1277,6 +1277,7 @@ int main(int argc, char* argv[]) {
 
   // Phase 1: Find Center
   // keep moving until 0 has been found
+  cout << "Phase 1: Find Center" << endl;
   while (theMaze[currentLocation.x][currentLocation.y].distance != 0) {
 
     // move to a cell, smaller value
@@ -1306,6 +1307,7 @@ int main(int argc, char* argv[]) {
 
   // Phase 2: EXPLORE
   // TODO: turn 180 here
+  cout << "Phase 2: Explore" << endl;
   checkStatus(theMaze, currentLocation, currentDirection);
 
   // perform 60 steps
@@ -1339,6 +1341,7 @@ int main(int argc, char* argv[]) {
 
   // Phase 3: SEARCH AGAIN
   // start from the beginning
+  cout << "Phase 3: Search Again" << endl;
   currentLocation.x = START_X;
   currentLocation.y = START_Y;
   currentDirection = NORTH;
@@ -1369,6 +1372,7 @@ int main(int argc, char* argv[]) {
   }
 
   // PHASE 4: SPEED RUN (store directions in an array)
+  cout << "Phase 4: Speed Run" << endl;
   int testArray[257] = {0};
   int index = 0;
   currentLocation.x = START_X;
