@@ -58,6 +58,8 @@ const char directionSymbols[DIRECTIONS] = {'^', '>', 'v', '<'};
 // maximum number of elements in the stack
 const int MAX_STACK = 257;
 
+const int MAX_EXPLORE = 60;
+
 //------------------------------------------------------------------------------
 // Helper functions start here
 
@@ -158,6 +160,63 @@ int numWalls(int walls) {
 }
 
 /**
+ * Name: neighborsVisited()
+ * Parameters: currentX - the x position of the current location.
+ * currentY - they y position of the current location.
+ * theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * enterableNeighbors - the array to be populated with distances if the cell
+ * is enterable from the current location.
+ * Description: This function will be able to determine which neighbors are
+ * enterable and populate the given array with the distances. It will keep the
+ * element as -1 if there is a wall.
+ */
+void neighborsVisited(int currentX, int currentY, cell theMaze[SIZE][SIZE],
+int visitedNeighbors[DIRECTIONS]) {
+
+  // check all directions whether this neighbor is visited
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    // the i represents the current direction being examined, if there is no
+    // wall then add the distance to the array
+    switch (i) {
+
+      case NORTH:
+
+        if (theMaze[currentX - 1][currentY].visited == 1) {
+
+          visitedNeighbors[i] = 1;
+        }
+        break;
+
+      case EAST:
+
+        if (theMaze[currentX][currentY + 1].visited == 1) {
+
+          visitedNeighbors[i] = 1;
+        }
+        break;
+
+      case SOUTH:
+
+        if (theMaze[currentX + 1][currentY].visited == 1) {
+
+          visitedNeighbors[i] = 1;
+        }
+        break;
+
+      case WEST:
+
+        if (theMaze[currentX][currentY - 1].visited == 1) {
+
+          visitedNeighbors[i] = 1;
+        }
+        break;
+    }
+  }
+}
+
+/**
  * Name: enterableCells()
  * Parameters: currentX - the x position of the current location.
  * currentY - they y position of the current location.
@@ -214,6 +273,33 @@ int enterableNeighbors[DIRECTIONS]) {
         break;
     }
   }
+}
+
+/**
+ * Name: findMaxDistance()
+ * Parameters: enterableNeighbors() - this is the array that contains the
+ * distances of the neighbors.
+ * Description: This function will find the max distance to center, except if
+ * the distance is -1, unenterable.
+ * Return: an integer representing the smallest distance in given array.
+ */
+int findMaxDistance(int enterableNeighbors[DIRECTIONS]) {
+
+  // this will keep track of the smallest distance
+  int max = -1;
+
+  // check all distances
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    int currentDistance = enterableNeighbors[i];
+
+    if (currentDistance != -1 && currentDistance > max) {
+
+      max = currentDistance;
+    }
+  }
+
+  return max;
 }
 
 /**
@@ -534,6 +620,7 @@ void fillWalls(int currentX, int currentY, cell theMaze[SIZE][SIZE]) {
 
   theMaze[currentX][currentY].wall = ALL_WALLS;
 }
+
 //------------------------------------------------------------------------------
 // Core functions start here
 
@@ -756,6 +843,96 @@ int* currentDirection) {
     for (; index < DIRECTIONS; index++) {
 
       if (enterableNeighbors[index] == minDistance) {
+
+        break;
+      }
+    }
+
+    // take a step to that direction
+    stepAtDirection(currentLocation, index);
+
+    // update the direction
+    *currentDirection = index;
+
+    // mark this cell cell as visited
+    theMaze[currentLocation->x][currentLocation->y].visited = true;
+
+    // TODO: turn to this direction, then take a step
+    return index;
+  }
+}
+
+/**
+ * Name: explore()
+ * Parameters: theMaze - the 2D array representing the maze, where each element
+ * is a cell that has a wall and distance member.
+ * currentLocation - the current location of the mouse.
+ * currentDirection - the current direction of the mouse.
+ * Description: This function will be able to decide which way to explore like
+ * move. It will first attempt to go to the one that is not visited, then the
+ * current direction, and finally the maximum distance in the order of N, E, S,
+ * W.
+ */
+int explore(cell theMaze[SIZE][SIZE], location* currentLocation,
+int* currentDirection) {
+
+  // get the x and y position of the current location
+  int currentX = currentLocation->x;
+  int currentY = currentLocation->y;
+
+  // initially, assume neighbors are not enterable
+  int enterableNeighbors[DIRECTIONS] = {-1, -1, -1, -1};
+
+  // check which neighbors can be entered (no wall in between)
+  enterableCells(currentX, currentY, theMaze, enterableNeighbors);
+
+  // find the minimum distance
+  int maxDistance = findMaxDistance(enterableNeighbors);
+
+  // this will store which neighbor has been visited, initially false
+  int visitedNeighbors[DIRECTIONS] = {-1, -1, -1, -1};
+
+  neighborsVisited(currentX, currentY, theMaze, visitedNeighbors);
+
+  // prioritized unvisited cells
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    if (visitedNeighbors[i] == 0) {
+
+      // take a step to that direction
+      stepAtDirection(currentLocation, i);
+
+      // update the direction
+      *currentDirection = i;
+
+      // mark this cell cell as visited
+      theMaze[currentLocation->x][currentLocation->y].visited = true;
+
+      return i;   
+    }
+  }
+
+  // check if the next cell of current direction has maximum distance
+  if (enterableNeighbors[*currentDirection] == maxDistance) {
+
+    // check the current direction then go straight
+    stepAtDirection(currentLocation, *currentDirection);
+
+    // mark this cell as visited
+    theMaze[currentLocation->x][currentLocation->y].visited = true;
+
+    // TODO: Move mouse straight one step
+    return *currentDirection;
+  }
+
+  // otherwise, find the earliest direction then turn that way and move
+  else {
+
+    // find the direction that has the minimum distance, then go there
+    int index = 0;
+    for (; index < DIRECTIONS; index++) {
+
+      if (enterableNeighbors[index] == maxDistance) {
 
         break;
       }
@@ -1091,8 +1268,34 @@ int main(int argc, char* argv[]) {
   // TODO: turn 180 here
   checkStatus(theMaze, currentLocation, currentDirection);
 
+  // perform 60 steps
+  int exploreSteps = 0;
+  deadOn = false;
+  while (exploreSteps < MAX_EXPLORE) {
 
-  // go 16 by 16 steps
+    explore(theMaze, &currentLocation , &currentDirection);
+
+    if (deadOn) {
+
+      fillWalls(previousX, previousY, theMaze);
+    }
+
+    // evaluate the cell to see if there are new walls, then update the
+    // distances accordingly
+    evaluateCell(theMaze, virtualMaze[currentLocation.x][currentLocation.y].wall,
+    currentLocation, &deadOn);
+    
+    if (deadOn) {
+
+      previousX = currentLocation.x;
+      previousY = currentLocation.y;
+    }
+
+    // check the status through print outs
+    checkStatus(theMaze, currentLocation, currentDirection);
+
+    exploreSteps++;
+  }
 
   // start from the beginning
 }
