@@ -63,6 +63,15 @@ const int MAX_EXPLORE = 60;
 //------------------------------------------------------------------------------
 // Helper functions start here
 
+void copyArray(int visitedNeighbors[DIRECTIONS],
+int enterableNeighbors[DIRECTIONS]) {
+
+  for (int i = 0; i < DIRECTIONS; i++) {
+
+    visitedNeighbors[i] = enterableNeighbors[i];
+  }
+}
+
 location popStack(location myStack[MAX_STACK], int* top) {
 
   location returnElement = myStack[*top];
@@ -183,34 +192,62 @@ int visitedNeighbors[DIRECTIONS]) {
 
       case NORTH:
 
-        if (theMaze[currentX - 1][currentY].visited == 1) {
+        if (theMaze[currentX - 1][currentY].visited == 1 &&
+        visitedNeighbors[i] != -1) {
 
           visitedNeighbors[i] = 1;
         }
+
+        else if (visitedNeighbors[i] != -1) {
+
+          visitedNeighbors[i] = 0;
+        }
+
         break;
 
       case EAST:
 
-        if (theMaze[currentX][currentY + 1].visited == 1) {
+        if (theMaze[currentX][currentY + 1].visited == 1 &&
+        visitedNeighbors[i] != -1) {
 
           visitedNeighbors[i] = 1;
         }
+
+        else if (visitedNeighbors[i] != -1) {
+
+          visitedNeighbors[i] = 0;
+        }
+
         break;
 
       case SOUTH:
 
-        if (theMaze[currentX + 1][currentY].visited == 1) {
+        if (theMaze[currentX + 1][currentY].visited == 1 &&
+        visitedNeighbors[i] != -1) {
 
           visitedNeighbors[i] = 1;
         }
+
+        else if (visitedNeighbors[i] != -1) {
+
+          visitedNeighbors[i] = 0;
+        }
+
         break;
 
       case WEST:
 
-        if (theMaze[currentX][currentY - 1].visited == 1) {
+        if (theMaze[currentX][currentY - 1].visited == 1 &&
+        visitedNeighbors[i] != -1) {
 
           visitedNeighbors[i] = 1;
         }
+
+        else if (visitedNeighbors[i] != -1) {
+
+          visitedNeighbors[i] = 0;
+        }
+
         break;
     }
   }
@@ -890,7 +927,8 @@ int* currentDirection) {
   int maxDistance = findMaxDistance(enterableNeighbors);
 
   // this will store which neighbor has been visited, initially false
-  int visitedNeighbors[DIRECTIONS] = {-1, -1, -1, -1};
+  int visitedNeighbors[DIRECTIONS] = {0};
+  copyArray(visitedNeighbors, enterableNeighbors);
 
   neighborsVisited(currentX, currentY, theMaze, visitedNeighbors);
 
@@ -1237,6 +1275,7 @@ int main(int argc, char* argv[]) {
   cout << endl << "Initial Maze: " << endl;
   checkStatus(theMaze, currentLocation, currentDirection);
 
+  // Phase 1: Find Center
   // keep moving until 0 has been found
   while (theMaze[currentLocation.x][currentLocation.y].distance != 0) {
 
@@ -1265,6 +1304,7 @@ int main(int argc, char* argv[]) {
     
   fillCenter(theMaze, &currentLocation, &currentDirection);
 
+  // Phase 2: EXPLORE
   // TODO: turn 180 here
   checkStatus(theMaze, currentLocation, currentDirection);
 
@@ -1297,5 +1337,66 @@ int main(int argc, char* argv[]) {
     exploreSteps++;
   }
 
+  // Phase 3: SEARCH AGAIN
   // start from the beginning
+  currentLocation.x = START_X;
+  currentLocation.y = START_Y;
+  currentDirection = NORTH;
+
+  while (theMaze[currentLocation.x][currentLocation.y].distance != 0) {
+
+    // move to a cell, smaller value
+    move(theMaze, &currentLocation, &currentDirection);
+
+    if (deadOn) {
+
+      fillWalls(previousX, previousY, theMaze);
+    }
+
+    // evaluate the cell to see if there are new walls, then update the
+    // distances accordingly
+    evaluateCell(theMaze, virtualMaze[currentLocation.x][currentLocation.y].wall,
+    currentLocation, &deadOn);
+    
+    if (deadOn) {
+
+      previousX = currentLocation.x;
+      previousY = currentLocation.y;
+    }
+
+    // check the status through print outs
+    checkStatus(theMaze, currentLocation, currentDirection);
+  }
+
+  // PHASE 4: SPEED RUN (store directions in an array)
+  int testArray[257] = {0};
+  int index = 0;
+  currentLocation.x = START_X;
+  currentLocation.y = START_Y;
+  currentDirection = NORTH;
+
+  while (theMaze[currentLocation.x][currentLocation.y].distance != 0) {
+
+    // move to a cell, smaller value
+    testArray[index++] = move(theMaze, &currentLocation, &currentDirection);
+
+    if (deadOn) {
+
+      fillWalls(previousX, previousY, theMaze);
+    }
+
+    // evaluate the cell to see if there are new walls, then update the
+    // distances accordingly
+    evaluateCell(theMaze, virtualMaze[currentLocation.x][currentLocation.y].wall,
+    currentLocation, &deadOn);
+    
+    if (deadOn) {
+
+      previousX = currentLocation.x;
+      previousY = currentLocation.y;
+    }
+
+    // check the status through print outs
+    checkStatus(theMaze, currentLocation, currentDirection);
+  }
 }
